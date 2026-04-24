@@ -24,6 +24,17 @@ interface Book3DProps {
   onSelect: (book: Book) => void;
 }
 
+// Pages edge texture is identical for every book — build it once.
+let sharedPagesTexture: CanvasTexture | null = null;
+function getSharedPagesTexture(): CanvasTexture {
+  if (sharedPagesTexture) return sharedPagesTexture;
+  const t = new CanvasTexture(generatePagesTexture());
+  t.colorSpace = SRGBColorSpace;
+  t.minFilter = LinearFilter;
+  sharedPagesTexture = t;
+  return t;
+}
+
 function useBookTextures(book: Book) {
   return useMemo(() => {
     const front = new CanvasTexture(generateCoverTexture(book));
@@ -34,9 +45,7 @@ function useBookTextures(book: Book) {
     back.colorSpace = SRGBColorSpace;
     const spine = new CanvasTexture(generateSpineTexture(book));
     spine.colorSpace = SRGBColorSpace;
-    const pages = new CanvasTexture(generatePagesTexture());
-    pages.colorSpace = SRGBColorSpace;
-    pages.minFilter = LinearFilter;
+    const pages = getSharedPagesTexture();
     return { front, back, spine, pages };
     // book.color / title / author / year drive the generated textures
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,7 +94,7 @@ export const Book3D = memo(
         textures.front.dispose();
         textures.back.dispose();
         textures.spine.dispose();
-        textures.pages.dispose();
+        // textures.pages is shared across all Book3D instances — don't dispose it here
       };
     }, [textures]);
 
