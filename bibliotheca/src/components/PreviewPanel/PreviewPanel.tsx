@@ -13,13 +13,20 @@ function Stars({ rating }: { rating: number }) {
     if (rating >= i) fill = 1;
     else if (rating > i - 1) fill = rating - (i - 1);
     stars.push(
-      <span key={i} className="relative inline-block w-4 h-4 mr-0.5">
-        <span className="absolute inset-0 text-[#3a332a]">★</span>
+      <span
+        key={i}
+        className="relative inline-block w-[18px] h-[18px] mr-0.5 leading-none text-[18px]"
+      >
+        <span className="absolute inset-0 flex items-center justify-center text-[#3a332a]">
+          ★
+        </span>
         <span
-          className="absolute inset-0 text-[#C9A96E] overflow-hidden"
+          className="absolute inset-y-0 left-0 overflow-hidden"
           style={{ width: `${fill * 100}%` }}
         >
-          ★
+          <span className="absolute inset-0 w-[18px] flex items-center justify-center text-[#C9A96E]">
+            ★
+          </span>
         </span>
       </span>
     );
