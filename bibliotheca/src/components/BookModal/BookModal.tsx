@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Book } from "../../types";
 import { generateCoverTexture } from "../../utils/generateCover";
 import { BookReader } from "./BookReader/BookReader";
@@ -41,6 +41,41 @@ export function BookModal({ book, onClose }: BookModalProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [isReading, onClose]);
 
+  // Focus trap: keep Tab inside the modal
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isReading) return;
+    const node = contentRef.current;
+    if (!node) return;
+    const prevActive = document.activeElement as HTMLElement | null;
+    const focusable = () =>
+      Array.from(
+        node.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        )
+      );
+    focusable()[0]?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    node.addEventListener("keydown", onKey);
+    return () => {
+      node.removeEventListener("keydown", onKey);
+      prevActive?.focus?.();
+    };
+  }, [isReading]);
+
   return (
     <AnimatePresence>
       <motion.div
@@ -60,6 +95,7 @@ export function BookModal({ book, onClose }: BookModalProps) {
         {!isReading && (
           <motion.div
             key="content"
+            ref={contentRef}
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}

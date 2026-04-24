@@ -21,8 +21,17 @@ function App() {
     );
   }
 
+  const tintColor = selectedBook?.color ?? "#0A0A0F";
+
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#0A0A0F] text-[#E8E0D0] relative">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none transition-[background] duration-700"
+        style={{
+          background: `radial-gradient(120% 80% at 30% 60%, ${tintColor}22 0%, transparent 55%)`,
+        }}
+      />
       <BookCarousel
         books={books}
         onFocus={setSelectedBook}
@@ -30,10 +39,7 @@ function App() {
       />
       <PreviewPanel book={selectedBook} onOpen={setOpenBook} />
       {openBook && (
-        <BookModal
-          book={openBook}
-          onClose={() => setOpenBook(null)}
-        />
+        <BookModal book={openBook} onClose={() => setOpenBook(null)} />
       )}
     </div>
   );

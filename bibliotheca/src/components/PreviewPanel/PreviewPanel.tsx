@@ -30,7 +30,7 @@ function Stars({ rating }: { rating: number }) {
 export function PreviewPanel({ book, onOpen }: PreviewPanelProps) {
   return (
     <div
-      className="absolute top-0 right-0 w-[45%] h-[55%] pointer-events-none md:block hidden"
+      className="absolute inset-x-0 bottom-0 h-[42%] md:inset-auto md:top-0 md:right-0 md:bottom-auto md:w-[45%] md:h-[55%] pointer-events-none"
       aria-live="polite"
     >
       <AnimatePresence mode="wait">
@@ -41,7 +41,7 @@ export function PreviewPanel({ book, onOpen }: PreviewPanelProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="w-full h-full p-8 pointer-events-auto backdrop-blur-md bg-black/40 border border-white/10 rounded-bl-3xl flex flex-col gap-4"
+            className="w-full h-full p-6 md:p-8 pointer-events-auto backdrop-blur-md bg-black/40 border border-white/10 rounded-t-3xl md:rounded-t-none md:rounded-bl-3xl flex flex-col gap-4 overflow-y-auto"
             style={{
               boxShadow: `inset 1px 1px 0 rgba(255,255,255,0.04), 0 20px 60px -20px ${book.color}80`,
             }}

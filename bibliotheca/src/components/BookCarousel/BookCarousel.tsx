@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Group } from "three";
+import { BufferAttribute, BufferGeometry, Group, Points } from "three";
 import type { Book } from "../../types";
 import { Book3D } from "./Book3D";
 import { useCarouselScroll } from "./useCarouselScroll";
@@ -92,6 +92,7 @@ function CarouselScene({ books, onFocus, onOpen }: BookCarouselProps) {
 
   return (
     <>
+      <DustParticles />
       <ambientLight intensity={0.6} />
       <directionalLight
         position={[5, 10, 5]}
@@ -114,6 +115,41 @@ function CarouselScene({ books, onFocus, onOpen }: BookCarouselProps) {
         />
       ))}
     </>
+  );
+}
+
+function DustParticles() {
+  const pointsRef = useRef<Points>(null);
+  const geometry = useMemo(() => {
+    const g = new BufferGeometry();
+    const count = 180;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 24;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 16;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 6 - 2;
+    }
+    g.setAttribute("position", new BufferAttribute(positions, 3));
+    return g;
+  }, []);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  useFrame((state) => {
+    if (!pointsRef.current) return;
+    pointsRef.current.rotation.z = state.clock.elapsedTime * 0.01;
+  });
+
+  return (
+    <points ref={pointsRef} geometry={geometry}>
+      <pointsMaterial
+        color="#C9A96E"
+        size={0.04}
+        transparent
+        opacity={0.35}
+        sizeAttenuation
+      />
+    </points>
   );
 }
 
