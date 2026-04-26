@@ -27,12 +27,20 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
 
     const clamp = (value: number) => Math.max(0, Math.min(maxIndex, value));
 
+    const isInsideModal = (target: EventTarget | null) =>
+      target instanceof Element && target.closest('[role="dialog"]') !== null;
+
     const onWheel = (event: WheelEvent) => {
+      if (isInsideModal(event.target)) return;
       event.preventDefault();
       target.current = clamp(target.current + event.deltaY * 0.004);
     };
 
     const onTouchStart = (event: TouchEvent) => {
+      if (isInsideModal(event.target)) {
+        touchStart.current = null;
+        return;
+      }
       touchStart.current = event.touches[0].clientY;
     };
 
@@ -49,6 +57,7 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
 
     const onMouseDown = (event: MouseEvent) => {
       if (event.button !== 0) return;
+      if (isInsideModal(event.target)) return;
       mouseDrag.current = {
         startX: event.clientX,
         startY: event.clientY,
