@@ -5,9 +5,20 @@ export type FlipDirection = "forward" | "backward" | null;
 const FLIP_DURATION = 600;
 const SETTLE_MAX_DURATION = 500;
 const SETTLE_MIN_DURATION = 120;
+const MULTI_LEAF_MS = 520;
+const MULTI_STAGGER_MS = 90;
+const MULTI_TOTAL_CAP_MS = 2400;
+
+export const MULTI_STAGGER_RATIO = MULTI_STAGGER_MS / MULTI_LEAF_MS;
 
 function easeCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
+}
+
+function multiFlipTotalMs(count: number): number {
+  if (count <= 1) return MULTI_LEAF_MS;
+  const natural = MULTI_LEAF_MS + (count - 1) * MULTI_STAGGER_MS;
+  return Math.min(MULTI_TOTAL_CAP_MS, natural);
 }
 
 function canFlip(
@@ -23,6 +34,7 @@ export interface PageFlip {
   totalSpreads: number;
   direction: FlipDirection;
   progressRef: React.MutableRefObject<number>;
+  multiFlipCount: number;
   flipForward: () => void;
   flipBackward: () => void;
   goTo: (spread: number) => void;
@@ -36,11 +48,13 @@ export function usePageFlip(totalPages: number): PageFlip {
   const totalSpreads = Math.max(1, Math.ceil(totalPages / 2));
   const [currentSpread, setCurrentSpread] = useState(0);
   const [direction, setDirection] = useState<FlipDirection>(null);
+  const [multiFlipCount, setMultiFlipCount] = useState(0);
   const directionRef = useRef<FlipDirection>(null);
   const progressRef = useRef(0);
   const pendingDirRef = useRef<FlipDirection>(null);
   const dragActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
+  const multiFlipCountRef = useRef(0);
 
   const cancelRaf = () => {
     if (rafRef.current != null) {
@@ -73,22 +87,31 @@ export function usePageFlip(totalPages: number): PageFlip {
   const goTo = useCallback(
     (spread: number) => {
       const clamped = Math.max(0, Math.min(totalSpreads - 1, spread));
+      if (clamped === currentSpread) return;
+      if (directionRef.current || dragActiveRef.current) return;
       cancelRaf();
-      dragActiveRef.current = false;
-      pendingDirRef.current = null;
+      const diff = clamped - currentSpread;
+      const count = Math.abs(diff);
+      multiFlipCountRef.current = count;
+      setMultiFlipCount(count);
+      pendingDirRef.current = diff > 0 ? "forward" : "backward";
       progressRef.current = 0;
-      setCurrentSpread(clamped);
-      setDir(null);
+      setDir(pendingDirRef.current);
     },
-    [totalSpreads]
+    [totalSpreads, currentSpread]
   );
 
-  // Auto-play animation for button / keyboard flips.
+  // Auto-play animation for button / keyboard flips and multi-page jumps.
   // Skipped while a drag is active — the drag drives progress manually.
   useEffect(() => {
     if (!direction || dragActiveRef.current) return;
+    const dir = direction;
+    const isMulti = multiFlipCountRef.current > 1;
+    const baseDuration = isMulti
+      ? multiFlipTotalMs(multiFlipCountRef.current)
+      : FLIP_DURATION;
     const from = progressRef.current;
-    const duration = FLIP_DURATION * Math.max(0.3, 1 - from);
+    const duration = baseDuration * Math.max(0.3, 1 - from);
     const startT = performance.now();
     const tick = (now: number) => {
       const t = Math.min(1, (now - startT) / duration);
@@ -97,12 +120,19 @@ export function usePageFlip(totalPages: number): PageFlip {
         rafRef.current = requestAnimationFrame(tick);
       } else {
         rafRef.current = null;
-        const dir = pendingDirRef.current;
+        const count = multiFlipCountRef.current;
         pendingDirRef.current = null;
         progressRef.current = 0;
-        setCurrentSpread((s) =>
-          dir === "forward" ? s + 1 : dir === "backward" ? s - 1 : s
-        );
+        if (count > 1) {
+          const sign = dir === "forward" ? 1 : -1;
+          setCurrentSpread((s) => s + count * sign);
+        } else {
+          setCurrentSpread((s) =>
+            dir === "forward" ? s + 1 : dir === "backward" ? s - 1 : s
+          );
+        }
+        multiFlipCountRef.current = 0;
+        setMultiFlipCount(0);
         setDir(null);
       }
     };
@@ -177,6 +207,7 @@ export function usePageFlip(totalPages: number): PageFlip {
     totalSpreads,
     direction,
     progressRef,
+    multiFlipCount,
     flipForward,
     flipBackward,
     goTo,

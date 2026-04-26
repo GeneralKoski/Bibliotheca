@@ -15,7 +15,7 @@ import type { Book } from "../../../types";
 import { IntroScene } from "./IntroScene";
 import { buildPageCanvas, PageMesh } from "./PageMesh";
 import { useGutenbergText } from "./useGutenbergText";
-import { type FlipDirection, usePageFlip } from "./usePageFlip";
+import { MULTI_STAGGER_RATIO, type FlipDirection, usePageFlip } from "./usePageFlip";
 
 interface BookReaderProps {
   book: Book;
@@ -45,6 +45,9 @@ function makePageTexture(canvas: HTMLCanvasElement, mirror: boolean) {
   return texture;
 }
 
+const MULTI_BASE_Z = 0.018;
+const MULTI_Z_STEP = 0.0035;
+
 interface FlipPageProps {
   frontText: string;
   backText: string;
@@ -56,6 +59,9 @@ interface FlipPageProps {
   progressRef: React.MutableRefObject<number>;
   tiltRef: React.MutableRefObject<number>;
   pivotX: 0;
+  leafIndex?: number;
+  leafCount?: number;
+  staggerRatio?: number;
 }
 
 function FlipPage({
@@ -68,9 +74,13 @@ function FlipPage({
   direction,
   progressRef,
   tiltRef,
+  leafIndex = 0,
+  leafCount = 1,
+  staggerRatio = 0,
 }: FlipPageProps) {
   const groupRef = useRef<Group>(null);
   const tiltSmoothRef = useRef(0);
+  const isMulti = leafCount > 1;
 
   const { frontGeom, backGeom, frontTex, backTex, initialPositions } = useMemo(() => {
     const frontGeom = makeFlipGeometry();
@@ -109,13 +119,30 @@ function FlipPage({
 
   useFrame(() => {
     if (!groupRef.current || !direction) return;
-    const p = progressRef.current;
+    const G = progressRef.current;
+    let p: number;
+    if (isMulti) {
+      const total = 1 + (leafCount - 1) * staggerRatio;
+      p = Math.max(0, Math.min(1, G * total - leafIndex * staggerRatio));
+    } else {
+      p = G;
+    }
     const rot =
       direction === "forward" ? -p * Math.PI : -Math.PI + p * Math.PI;
     groupRef.current.rotation.y = rot;
 
-    // Smooth tilt tracking so the page reacts to cursor Y without jitter
-    const tiltTarget = tiltRef.current * (direction === "forward" ? 1 : -1);
+    if (isMulti) {
+      // Z transitions from "leaf 0 on top of starting stack" to "leaf N-1 on top of ending stack"
+      const zFromIdx = leafCount - 1 - leafIndex;
+      const zToIdx = leafIndex;
+      const zIdx = zFromIdx + (zToIdx - zFromIdx) * p;
+      groupRef.current.position.z = MULTI_BASE_Z + zIdx * MULTI_Z_STEP;
+    }
+
+    // Smooth tilt tracking so the page reacts to cursor Y without jitter (drag only)
+    const tiltTarget = isMulti
+      ? 0
+      : tiltRef.current * (direction === "forward" ? 1 : -1);
     tiltSmoothRef.current += (tiltTarget - tiltSmoothRef.current) * 0.18;
     const liftEnvelope = Math.sin(p * Math.PI);
     groupRef.current.rotation.z = tiltSmoothRef.current * 0.28 * liftEnvelope;
@@ -153,7 +180,14 @@ function FlipPage({
   const shadowRef = useRef(1);
   useFrame(() => {
     if (!direction) return;
-    const p = progressRef.current;
+    const G = progressRef.current;
+    let p: number;
+    if (isMulti) {
+      const total = 1 + (leafCount - 1) * staggerRatio;
+      p = Math.max(0, Math.min(1, G * total - leafIndex * staggerRatio));
+    } else {
+      p = G;
+    }
     shadowRef.current = 1 - Math.sin(p * Math.PI) * 0.4;
   });
 
@@ -192,6 +226,7 @@ interface SceneProps {
   direction: FlipDirection;
   progressRef: React.MutableRefObject<number>;
   tiltRef: React.MutableRefObject<number>;
+  multiFlipCount: number;
 }
 
 function ReaderScene({
@@ -201,6 +236,7 @@ function ReaderScene({
   direction,
   progressRef,
   tiltRef,
+  multiFlipCount,
 }: SceneProps) {
   const totalPages = pages.length;
   const leftIdx = currentSpread * 2;
@@ -208,6 +244,8 @@ function ReaderScene({
 
   const leftText = pages[leftIdx] ?? "";
   const rightText = pages[rightIdx] ?? "";
+
+  const isMulti = multiFlipCount > 1 && direction !== null;
 
   // For forward flip: new right page should be visible during flip (peeking out)
   // For backward flip: new left page should be visible
@@ -229,6 +267,18 @@ function ReaderScene({
   const flipBackNum =
     direction === "forward" ? rightIdx + 2 : leftIdx + 1;
 
+  // Multi-flip: target spread + static pages whose text matches the side
+  // that gets revealed at the END of the animation, so the swap to the new
+  // currentSpread is visually identical to what the last visible leaf shows.
+  const sign = direction === "forward" ? 1 : -1;
+  const targetSpread = currentSpread + sign * multiFlipCount;
+  const targetLeftIdx = targetSpread * 2;
+  const targetRightIdx = targetLeftIdx + 1;
+
+  const multiStaticLeftIdx = direction === "forward" ? leftIdx : targetLeftIdx;
+  const multiStaticRightIdx =
+    direction === "forward" ? targetRightIdx : rightIdx;
+
   return (
     <>
       <ambientLight intensity={0.5} />
@@ -245,39 +295,89 @@ function ReaderScene({
         <meshStandardMaterial color="#2a1810" roughness={0.8} />
       </mesh>
 
-      {/* Left static page */}
-      <PageMesh
-        text={direction === "forward" ? leftText : peekLeftText}
-        pageNumber={direction === "forward" ? leftIdx + 1 : peekLeftNum}
-        totalPages={totalPages}
-        bookTitle={bookTitle}
-        position={[-PAGE_W / 2, 0, 0]}
-      />
+      {isMulti ? (
+        <>
+          <PageMesh
+            text={pages[multiStaticLeftIdx] ?? ""}
+            pageNumber={multiStaticLeftIdx + 1}
+            totalPages={totalPages}
+            bookTitle={bookTitle}
+            position={[-PAGE_W / 2, 0, 0]}
+          />
+          <PageMesh
+            text={pages[multiStaticRightIdx] ?? ""}
+            pageNumber={multiStaticRightIdx + 1}
+            totalPages={totalPages}
+            bookTitle={bookTitle}
+            position={[PAGE_W / 2, 0, 0]}
+          />
+          {Array.from({ length: multiFlipCount }).map((_, i) => {
+            const spreadOfLeaf = currentSpread + sign * i;
+            const fIdx =
+              direction === "forward"
+                ? spreadOfLeaf * 2 + 1
+                : spreadOfLeaf * 2 - 1;
+            const bIdx =
+              direction === "forward"
+                ? spreadOfLeaf * 2 + 2
+                : spreadOfLeaf * 2;
+            return (
+              <FlipPage
+                key={i}
+                frontText={pages[fIdx] ?? ""}
+                backText={pages[bIdx] ?? ""}
+                frontPageNumber={fIdx + 1}
+                backPageNumber={bIdx + 1}
+                totalPages={totalPages}
+                bookTitle={bookTitle}
+                direction={direction}
+                progressRef={progressRef}
+                tiltRef={tiltRef}
+                pivotX={0}
+                leafIndex={i}
+                leafCount={multiFlipCount}
+                staggerRatio={MULTI_STAGGER_RATIO}
+              />
+            );
+          })}
+        </>
+      ) : (
+        <>
+          {/* Left static page */}
+          <PageMesh
+            text={direction === "forward" ? leftText : peekLeftText}
+            pageNumber={direction === "forward" ? leftIdx + 1 : peekLeftNum}
+            totalPages={totalPages}
+            bookTitle={bookTitle}
+            position={[-PAGE_W / 2, 0, 0]}
+          />
 
-      {/* Right static page */}
-      <PageMesh
-        text={direction === "forward" ? peekRightText : rightText}
-        pageNumber={direction === "forward" ? peekRightNum : rightIdx + 1}
-        totalPages={totalPages}
-        bookTitle={bookTitle}
-        position={[PAGE_W / 2, 0, 0]}
-      />
+          {/* Right static page */}
+          <PageMesh
+            text={direction === "forward" ? peekRightText : rightText}
+            pageNumber={direction === "forward" ? peekRightNum : rightIdx + 1}
+            totalPages={totalPages}
+            bookTitle={bookTitle}
+            position={[PAGE_W / 2, 0, 0]}
+          />
 
-      {/* Flipping page */}
-      <group position={[0, 0, 0.02]}>
-        <FlipPage
-          frontText={flipFrontText}
-          backText={flipBackText}
-          frontPageNumber={flipFrontNum}
-          backPageNumber={flipBackNum}
-          totalPages={totalPages}
-          bookTitle={bookTitle}
-          direction={direction}
-          progressRef={progressRef}
-          tiltRef={tiltRef}
-          pivotX={0}
-        />
-      </group>
+          {/* Flipping page */}
+          <group position={[0, 0, 0.02]}>
+            <FlipPage
+              frontText={flipFrontText}
+              backText={flipBackText}
+              frontPageNumber={flipFrontNum}
+              backPageNumber={flipBackNum}
+              totalPages={totalPages}
+              bookTitle={bookTitle}
+              direction={direction}
+              progressRef={progressRef}
+              tiltRef={tiltRef}
+              pivotX={0}
+            />
+          </group>
+        </>
+      )}
     </>
   );
 }
@@ -313,6 +413,7 @@ export function BookReader({ book, onClose }: BookReaderProps) {
     totalSpreads,
     direction,
     progressRef,
+    multiFlipCount,
     flipForward,
     flipBackward,
     goTo,
@@ -516,6 +617,7 @@ export function BookReader({ book, onClose }: BookReaderProps) {
               direction={direction}
               progressRef={progressRef}
               tiltRef={tiltRef}
+              multiFlipCount={multiFlipCount}
             />
           ) : (
             <IntroScene
