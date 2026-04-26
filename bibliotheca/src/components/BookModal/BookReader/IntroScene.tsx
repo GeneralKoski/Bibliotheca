@@ -11,7 +11,6 @@ import {
   type Group,
 } from "three";
 import type { Book } from "../../../types";
-import { generateCoverTexture } from "../../../utils/generateCover";
 import { buildPageCanvas, PageMesh } from "./PageMesh";
 
 const PAGE_W = 3;
@@ -25,7 +24,12 @@ const STAGGER_MS = 100;
 const FADE_MS = 120;
 
 const MIN_FLIP_MS = 1300;
-const STOP_FADE_MS = 300;
+
+function computeExitAt(stopAt: number, offsetMs: number): number {
+  const rel = stopAt - offsetMs;
+  if (rel <= 0) return stopAt;
+  return offsetMs + Math.ceil(rel / CYCLE_MS) * CYCLE_MS;
+}
 
 const LOREM_BASE = [
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\n\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
@@ -40,12 +44,6 @@ const LOREM_BASE = [
 function makeFlipGeometry(): PlaneGeometry {
   const geom = new PlaneGeometry(PAGE_W, PAGE_H, PAGE_SEGMENTS, 1);
   geom.translate(PAGE_W / 2, 0, 0);
-  return geom;
-}
-
-function makeCoverGeometry(): PlaneGeometry {
-  const geom = new PlaneGeometry(PAGE_W, PAGE_H, PAGE_SEGMENTS, 1);
-  geom.translate(-PAGE_W / 2, 0, 0);
   return geom;
 }
 
@@ -142,14 +140,21 @@ function IntroFlipPageLoop({
   useFrame(() => {
     if (!groupRef.current) return;
     const elapsedMs = performance.now() - startRef.current;
-
-    // While stopAt is null → loop. When set → freeze rotation at stopAt, fade out during zoom.
     const stopAt = stopAtMsRef.current;
-    const refMs = stopAt === null ? elapsedMs : Math.min(elapsedMs, stopAt);
-    const rel = refMs - offsetMs;
 
+    // After stop signal: page exits at the next natural cycle boundary, where
+    // its opacity is already 0 due to the per-cycle fade. No global fade.
+    if (stopAt !== null) {
+      const exitAt = computeExitAt(stopAt, offsetMs);
+      if (elapsedMs >= exitAt) {
+        if (frontMatRef.current) frontMatRef.current.opacity = 0;
+        if (backMatRef.current) backMatRef.current.opacity = 0;
+        return;
+      }
+    }
+
+    const rel = elapsedMs - offsetMs;
     if (rel < 0) {
-      // Page hasn't started yet
       if (frontMatRef.current) frontMatRef.current.opacity = 0;
       if (backMatRef.current) backMatRef.current.opacity = 0;
       return;
@@ -190,12 +195,6 @@ function IntroFlipPageLoop({
       opacity = Math.max(0, (FLIP_MS - cyclePos) / FADE_MS);
     else opacity = 1;
 
-    // Fade everything out once the stop signal is set.
-    if (stopAt !== null && elapsedMs > stopAt) {
-      const zt = Math.min(1, (elapsedMs - stopAt) / STOP_FADE_MS);
-      opacity *= Math.max(0, 1 - zt * 1.6);
-    }
-
     if (frontMatRef.current) frontMatRef.current.opacity = opacity;
     if (backMatRef.current) backMatRef.current.opacity = opacity;
   });
@@ -226,35 +225,6 @@ function IntroFlipPageLoop({
   );
 }
 
-interface IntroCoverProps {
-  book: Book;
-}
-
-function IntroCover({ book }: IntroCoverProps) {
-  const { frontGeom, frontTex } = useMemo(() => {
-    const fg = makeCoverGeometry();
-    const ft = makePageTexture(generateCoverTexture(book), false);
-    return { frontGeom: fg, frontTex: ft };
-  }, [book]);
-
-  useEffect(() => {
-    return () => {
-      frontGeom.dispose();
-      frontTex.dispose();
-    };
-  }, [frontGeom, frontTex]);
-
-  return (
-    <mesh geometry={frontGeom} position={[0, 0, 0.06]}>
-      <meshStandardMaterial
-        map={frontTex}
-        side={FrontSide}
-        roughness={0.75}
-      />
-    </mesh>
-  );
-}
-
 interface IntroSceneProps {
   book: Book;
   ready: boolean;
@@ -278,6 +248,7 @@ export function IntroScene({
 }: IntroSceneProps) {
   const startRef = useRef(performance.now());
   const stopAtMsRef = useRef<number | null>(null);
+  const doneAtMsRef = useRef<number | null>(null);
   const doneFiredRef = useRef(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
@@ -285,14 +256,21 @@ export function IntroScene({
   useEffect(() => {
     if (!ready || stopAtMsRef.current !== null) return;
     const elapsed = performance.now() - startRef.current;
-    stopAtMsRef.current = Math.max(elapsed, MIN_FLIP_MS);
+    const stopAt = Math.max(elapsed, MIN_FLIP_MS);
+    stopAtMsRef.current = stopAt;
+    let maxExit = stopAt;
+    for (let i = 0; i < FLIP_COUNT; i++) {
+      const exit = computeExitAt(stopAt, i * STAGGER_MS);
+      if (exit > maxExit) maxExit = exit;
+    }
+    doneAtMsRef.current = maxExit;
   }, [ready]);
 
   useFrame(() => {
-    const stopAt = stopAtMsRef.current;
-    if (stopAt === null) return;
+    const doneAt = doneAtMsRef.current;
+    if (doneAt === null || doneFiredRef.current) return;
     const elapsedMs = performance.now() - startRef.current;
-    if (elapsedMs - stopAt >= STOP_FADE_MS && !doneFiredRef.current) {
+    if (elapsedMs >= doneAt) {
       doneFiredRef.current = true;
       onDoneRef.current();
     }
@@ -300,7 +278,7 @@ export function IntroScene({
 
   return (
     <>
-      <ambientLight intensity={0.55} />
+      <ambientLight intensity={0.5} />
       <directionalLight position={[-3, 5, 3]} intensity={1.0} castShadow />
       <pointLight position={[0, 3, 4]} intensity={1.2} color="#FFF8E7" />
 
@@ -339,8 +317,6 @@ export function IntroScene({
           zOffset={0.018 + (FLIP_COUNT - i) * 0.003}
         />
       ))}
-
-      <IntroCover book={book} />
     </>
   );
 }

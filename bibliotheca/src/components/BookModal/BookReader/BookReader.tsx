@@ -305,8 +305,8 @@ export function BookReader({ book, onClose }: BookReaderProps) {
     return pages;
   }, [pages, error, book]);
 
-  const introLeftText = !loading && pages[0] ? pages[0] : INTRO_LOREM_A;
-  const introRightText = !loading && pages[1] ? pages[1] : INTRO_LOREM_B;
+  const introLeftText = !loading ? displayPages[0] ?? INTRO_LOREM_A : INTRO_LOREM_A;
+  const introRightText = !loading ? displayPages[1] ?? INTRO_LOREM_B : INTRO_LOREM_B;
 
   const {
     currentSpread,
@@ -525,9 +525,7 @@ export function BookReader({ book, onClose }: BookReaderProps) {
               rightPageText={introRightText}
               leftPageNumber={1}
               rightPageNumber={2}
-              totalPages={
-                !loading && pages.length > 0 ? pages.length : 320
-              }
+              totalPages={!loading ? displayPages.length : 320}
               onDone={() => setIntroAnimationDone(true)}
             />
           )}
