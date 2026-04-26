@@ -19,14 +19,14 @@ export function BookModal({ book, onClose }: BookModalProps) {
   const [coverSrc, setCoverSrc] = useState<string>(
     book.coverId != null
       ? `https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg`
-      : proceduralDataUrl
+      : proceduralDataUrl,
   );
 
   useEffect(() => {
     setCoverSrc(
       book.coverId != null
         ? `https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg`
-        : proceduralDataUrl
+        : proceduralDataUrl,
     );
   }, [book.coverId, proceduralDataUrl]);
 
@@ -51,8 +51,8 @@ export function BookModal({ book, onClose }: BookModalProps) {
     const focusable = () =>
       Array.from(
         node.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
-        )
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+        ),
       );
     focusable()[0]?.focus();
     const onKey = (event: KeyboardEvent) => {
@@ -114,7 +114,7 @@ export function BookModal({ book, onClose }: BookModalProps) {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8 p-10">
               <div className="md:col-span-2 flex flex-col items-center gap-6">
                 <div
-                  className="w-full aspect-[2/3] rounded-md overflow-hidden shadow-[0_30px_60px_-20px_rgba(0,0,0,0.9)]"
+                  className="w-full max-w-[300px] aspect-[2/3] rounded-md overflow-hidden shadow-[0_30px_60px_-20px_rgba(0,0,0,0.9)]"
                   style={{ backgroundColor: book.color }}
                 >
                   <img
@@ -198,7 +198,9 @@ export function BookModal({ book, onClose }: BookModalProps) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between border-b border-white/5 pb-1">
-      <span className="uppercase tracking-[0.15em] text-[#8a8272]">{label}</span>
+      <span className="uppercase tracking-[0.15em] text-[#8a8272]">
+        {label}
+      </span>
       <span className="text-[#E8E0D0]">{value}</span>
     </div>
   );
