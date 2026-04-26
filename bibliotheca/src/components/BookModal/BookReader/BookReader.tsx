@@ -47,6 +47,7 @@ function makePageTexture(canvas: HTMLCanvasElement, mirror: boolean) {
 
 const MULTI_BASE_Z = 0.018;
 const MULTI_Z_STEP = 0.0035;
+const MULTI_Z_MAX_RANGE = 0.04;
 
 interface FlipPageProps {
   frontText: string;
@@ -132,11 +133,17 @@ function FlipPage({
     groupRef.current.rotation.y = rot;
 
     if (isMulti) {
-      // Z transitions from "leaf 0 on top of starting stack" to "leaf N-1 on top of ending stack"
+      // Z transitions from "leaf 0 on top of starting stack" to "leaf N-1 on top of ending stack".
+      // Step shrinks when count grows so the total stack depth stays bounded
+      // (otherwise high page counts produce a noticeable perspective zoom).
+      const zStep = Math.min(
+        MULTI_Z_STEP,
+        MULTI_Z_MAX_RANGE / Math.max(1, leafCount - 1)
+      );
       const zFromIdx = leafCount - 1 - leafIndex;
       const zToIdx = leafIndex;
       const zIdx = zFromIdx + (zToIdx - zFromIdx) * p;
-      groupRef.current.position.z = MULTI_BASE_Z + zIdx * MULTI_Z_STEP;
+      groupRef.current.position.z = MULTI_BASE_Z + zIdx * zStep;
     }
 
     // Smooth tilt tracking so the page reacts to cursor Y without jitter (drag only)
