@@ -11,7 +11,8 @@ import {
   type Group,
 } from "three";
 import type { Book } from "../../../types";
-import { buildPageCanvas, PageMesh } from "./PageMesh";
+import { buildPageCanvas } from "./buildPageCanvas";
+import { PageMesh } from "./PageMesh";
 
 const PAGE_W = 3;
 const PAGE_H = 4;

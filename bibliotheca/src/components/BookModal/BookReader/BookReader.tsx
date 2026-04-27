@@ -13,7 +13,8 @@ import {
 } from "three";
 import type { Book } from "../../../types";
 import { IntroScene } from "./IntroScene";
-import { buildPageCanvas, PageMesh } from "./PageMesh";
+import { buildPageCanvas } from "./buildPageCanvas";
+import { PageMesh } from "./PageMesh";
 import { useGutenbergText } from "./useGutenbergText";
 import { MULTI_STAGGER_RATIO, type FlipDirection, usePageFlip } from "./usePageFlip";
 
