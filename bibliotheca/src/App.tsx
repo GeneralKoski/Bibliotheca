@@ -40,7 +40,7 @@ function TopBar({
         </span>
       </div>
 
-      <div className="absolute top-6 right-6 z-10 pointer-events-none flex flex-col items-end gap-1.5">
+      <div className="absolute top-6 md:top-28 right-6 md:right-10 z-10 pointer-events-none flex flex-col items-end gap-1.5">
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#5a5347]">
           Volume
         </span>
