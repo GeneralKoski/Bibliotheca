@@ -23,14 +23,21 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
 
   useEffect(() => {
     const maxIndex = Math.max(0, itemCount - 1);
+    target.current = 0;
+    current.current = 0;
 
     const clamp = (value: number) => Math.max(0, Math.min(maxIndex, value));
 
     const isInsideModal = (target: EventTarget | null) =>
       target instanceof Element && target.closest('[role="dialog"]') !== null;
 
+    const isInsideScrollable = (target: EventTarget | null) =>
+      target instanceof Element &&
+      target.closest("[data-scroll-allow]") !== null;
+
     const onWheel = (event: WheelEvent) => {
       if (isInsideModal(event.target)) return;
+      if (isInsideScrollable(event.target)) return;
       event.preventDefault();
       const delta =
         Math.abs(event.deltaX) > Math.abs(event.deltaY)
@@ -40,7 +47,7 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
     };
 
     const onTouchStart = (event: TouchEvent) => {
-      if (isInsideModal(event.target)) {
+      if (isInsideModal(event.target) || isInsideScrollable(event.target)) {
         touchStart.current = null;
         return;
       }
@@ -66,7 +73,8 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
 
     const onMouseDown = (event: MouseEvent) => {
       if (event.button !== 0) return;
-      if (isInsideModal(event.target)) return;
+      if (isInsideModal(event.target) || isInsideScrollable(event.target))
+        return;
       mouseDrag.current = {
         startX: event.clientX,
         startY: event.clientY,

@@ -58,7 +58,7 @@ function Stars({ rating, color }: { rating: number; color: string }) {
 export function PreviewPanel({ book, onOpen }: PreviewPanelProps) {
   return (
     <div
-      className="absolute inset-x-0 bottom-0 px-6 pb-7 max-h-[58%] md:inset-auto md:top-28 md:left-10 md:bottom-auto md:max-h-[calc(58vh-7rem)] md:overflow-hidden md:w-[440px] md:px-0 md:pb-0 pointer-events-none"
+      className="absolute inset-x-0 bottom-0 px-6 pb-7 max-h-[58%] md:inset-auto md:top-32 md:left-10 md:bottom-auto md:max-h-[calc(58vh-8rem)] md:overflow-hidden md:w-[440px] md:px-0 md:pb-0 pointer-events-none"
       aria-live="polite"
     >
       <div
