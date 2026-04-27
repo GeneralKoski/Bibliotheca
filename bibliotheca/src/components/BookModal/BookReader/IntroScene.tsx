@@ -23,7 +23,7 @@ const FLIP_MS = 600;
 const STAGGER_MS = 100;
 const FADE_MS = 120;
 
-const MIN_FLIP_MS = 1300;
+const MIN_FLIP_MS = 600;
 
 function computeExitAt(stopAt: number, offsetMs: number): number {
   const rel = stopAt - offsetMs;
@@ -49,7 +49,7 @@ function makeFlipGeometry(): PlaneGeometry {
 
 function makePageTexture(
   canvas: HTMLCanvasElement,
-  mirror: boolean
+  mirror: boolean,
 ): CanvasTexture {
   const t = new CanvasTexture(canvas);
   t.colorSpace = SRGBColorSpace;
@@ -103,7 +103,7 @@ function IntroFlipPageLoop({
           totalPages,
           bookTitle,
         }),
-        false
+        false,
       );
       const bt = makePageTexture(
         buildPageCanvas({
@@ -112,7 +112,7 @@ function IntroFlipPageLoop({
           totalPages,
           bookTitle,
         }),
-        true
+        true,
       );
       const pa = fg.attributes.position as BufferAttribute;
       const ip = new Float32Array(pa.array);
@@ -125,7 +125,7 @@ function IntroFlipPageLoop({
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [],
   );
 
   useEffect(() => {
