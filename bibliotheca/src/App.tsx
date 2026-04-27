@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import type { Book } from "./types";
 import { useBooks } from "./hooks/useBooks";
 import { BookCarousel } from "./components/BookCarousel/BookCarousel";
 import { PreviewPanel } from "./components/PreviewPanel/PreviewPanel";
@@ -25,9 +24,30 @@ function LoadingScreen() {
 }
 
 function App() {
-  const { books, loading } = useBooks();
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
-  const [openBook, setOpenBook] = useState<Book | null>(null);
+  const { books, loading, hydrateBookById } = useBooks();
+  const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
+  const [openBookId, setOpenBookId] = useState<number | null>(null);
+
+  const selectedBook = useMemo(
+    () => books.find((book) => book.id === selectedBookId) ?? null,
+    [books, selectedBookId]
+  );
+  const openBook = useMemo(
+    () => books.find((book) => book.id === openBookId) ?? null,
+    [books, openBookId]
+  );
+
+  useEffect(() => {
+    if (selectedBookId != null) {
+      hydrateBookById(selectedBookId);
+    }
+  }, [selectedBookId, hydrateBookById]);
+
+  useEffect(() => {
+    if (openBookId != null) {
+      hydrateBookById(openBookId);
+    }
+  }, [openBookId, hydrateBookById]);
 
   if (loading) {
     return <LoadingScreen />;
@@ -46,12 +66,12 @@ function App() {
       />
       <BookCarousel
         books={books}
-        onFocus={setSelectedBook}
-        onOpen={setOpenBook}
+        onFocus={(book) => setSelectedBookId(book?.id ?? null)}
+        onOpen={(book) => setOpenBookId(book.id)}
       />
-      <PreviewPanel book={selectedBook} onOpen={setOpenBook} />
+      <PreviewPanel book={selectedBook} onOpen={(book) => setOpenBookId(book.id)} />
       {openBook && (
-        <BookModal book={openBook} onClose={() => setOpenBook(null)} />
+        <BookModal book={openBook} onClose={() => setOpenBookId(null)} />
       )}
     </div>
   );

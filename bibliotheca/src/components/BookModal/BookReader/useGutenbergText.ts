@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 const WORDS_PER_PAGE = 280;
+const textCache = new Map<number, string>();
+const pendingTextRequests = new Map<number, Promise<string>>();
 
 function stripBoilerplate(raw: string): string {
   const startMatch = raw.match(/\*\*\*\s*START OF [^\n]*\*\*\*/i);
@@ -52,40 +54,53 @@ export interface GutenbergText {
 }
 
 export function useGutenbergText(gutenbergId: number): GutenbergText {
-  const [raw, setRaw] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cachedText = textCache.get(gutenbergId) ?? null;
+  const [raw, setRaw] = useState<string | null>(cachedText);
+  const [loading, setLoading] = useState(() => cachedText == null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const directUrl = `https://www.gutenberg.org/cache/epub/${gutenbergId}/pg${gutenbergId}.txt`;
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+    if (cachedText != null) {
+      return;
+    }
+
+    let ignore = false;
+    const url = `/api/gutenberg/${gutenbergId}`;
 
     setLoading(true);
     setError(null);
     setRaw(null);
 
-    const tryFetch = (url: string) =>
-      fetch(url, { signal: controller.signal }).then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.text();
-      });
+    const request =
+      pendingTextRequests.get(gutenbergId) ??
+      fetch(url)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.text();
+        })
+        .finally(() => {
+          pendingTextRequests.delete(gutenbergId);
+        });
 
-    tryFetch(directUrl)
-      .catch(() => tryFetch(proxyUrl))
+    pendingTextRequests.set(gutenbergId, request);
+
+    request
       .then((text) => {
-        if (controller.signal.aborted) return;
+        if (ignore) return;
+        textCache.set(gutenbergId, text);
         setRaw(text);
         setLoading(false);
       })
       .catch((err) => {
-        if (controller.signal.aborted) return;
+        if (ignore) return;
         setError(err?.message ?? "Failed to load book");
         setLoading(false);
       });
 
-    return () => controller.abort();
-  }, [gutenbergId]);
+    return () => {
+      ignore = true;
+    };
+  }, [cachedText, gutenbergId]);
 
   const pages = useMemo(() => {
     if (!raw) return [];

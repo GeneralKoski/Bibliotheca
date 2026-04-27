@@ -188,7 +188,11 @@ export function BookModal({ book, onClose }: BookModalProps) {
         )}
 
         {isReading && (
-          <BookReader book={book} onClose={() => setIsReading(false)} />
+          <BookReader
+            key={book.gutenbergId}
+            book={book}
+            onClose={() => setIsReading(false)}
+          />
         )}
       </motion.div>
     </AnimatePresence>

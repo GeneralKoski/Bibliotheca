@@ -14,17 +14,19 @@ interface OpenLibraryResponse {
   docs?: OpenLibraryDoc[];
 }
 
-const SEARCH_URL = "https://openlibrary.org/search.json";
-const FIELDS =
-  "key,title,author_name,cover_i,first_publish_year,number_of_pages_median,subject";
+const OPEN_LIBRARY_ENABLED = import.meta.env.VITE_ENABLE_OPENLIBRARY === "true";
 
-async function hydrateOne(
+export async function hydrateBook(
   book: Book,
   signal: AbortSignal
 ): Promise<Book> {
-  const url = `${SEARCH_URL}?q=${encodeURIComponent(
+  if (!OPEN_LIBRARY_ENABLED) {
+    return book;
+  }
+
+  const url = `/api/openlibrary/search?q=${encodeURIComponent(
     `${book.title} ${book.author}`
-  )}&fields=${FIELDS}&limit=1`;
+  )}`;
 
   try {
     const res = await fetch(url, { signal });
@@ -45,11 +47,4 @@ async function hydrateOne(
   } catch {
     return book;
   }
-}
-
-export async function hydrateBooks(
-  seed: Book[],
-  signal: AbortSignal
-): Promise<Book[]> {
-  return Promise.all(seed.map((book) => hydrateOne(book, signal)));
 }
