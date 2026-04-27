@@ -36,7 +36,7 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
         Math.abs(event.deltaX) > Math.abs(event.deltaY)
           ? event.deltaX
           : event.deltaY;
-      target.current = clamp(target.current + delta * 0.05);
+      target.current = clamp(target.current + delta * 0.01875);
     };
 
     const onTouchStart = (event: TouchEvent) => {
@@ -57,7 +57,7 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
         x: event.touches[0].clientX,
         y: event.touches[0].clientY,
       };
-      target.current = clamp(target.current + dx * 0.18);
+      target.current = clamp(target.current + dx * 0.034);
     };
 
     const onTouchEnd = () => {
@@ -86,7 +86,7 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
         document.body.style.cursor = "grabbing";
       }
       if (drag.moved) {
-        target.current = clamp(drag.startTarget - dxTotal * 0.16);
+        target.current = clamp(drag.startTarget - dxTotal * 0.03);
       }
     };
 
