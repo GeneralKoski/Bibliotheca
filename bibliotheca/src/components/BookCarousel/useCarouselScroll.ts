@@ -12,11 +12,10 @@ const DRAG_THRESHOLD_PX = 5;
 export function useCarouselScroll(itemCount: number): CarouselScroll {
   const target = useRef(0);
   const current = useRef(0);
-  const touchStart = useRef<number | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const mouseDrag = useRef<{
     startX: number;
     startY: number;
-    lastY: number;
     startTarget: number;
     moved: boolean;
   } | null>(null);
@@ -33,7 +32,11 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
     const onWheel = (event: WheelEvent) => {
       if (isInsideModal(event.target)) return;
       event.preventDefault();
-      target.current = clamp(target.current + event.deltaY * 0.004);
+      const delta =
+        Math.abs(event.deltaX) > Math.abs(event.deltaY)
+          ? event.deltaX
+          : event.deltaY;
+      target.current = clamp(target.current + delta * 0.05);
     };
 
     const onTouchStart = (event: TouchEvent) => {
@@ -41,14 +44,20 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
         touchStart.current = null;
         return;
       }
-      touchStart.current = event.touches[0].clientY;
+      touchStart.current = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+      };
     };
 
     const onTouchMove = (event: TouchEvent) => {
       if (touchStart.current == null) return;
-      const dy = touchStart.current - event.touches[0].clientY;
-      touchStart.current = event.touches[0].clientY;
-      target.current = clamp(target.current + dy * 0.01);
+      const dx = touchStart.current.x - event.touches[0].clientX;
+      touchStart.current = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+      };
+      target.current = clamp(target.current + dx * 0.18);
     };
 
     const onTouchEnd = () => {
@@ -61,7 +70,6 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
       mouseDrag.current = {
         startX: event.clientX,
         startY: event.clientY,
-        lastY: event.clientY,
         startTarget: target.current,
         moved: false,
       };
@@ -78,8 +86,7 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
         document.body.style.cursor = "grabbing";
       }
       if (drag.moved) {
-        target.current = clamp(drag.startTarget - dyTotal * 0.01);
-        drag.lastY = event.clientY;
+        target.current = clamp(drag.startTarget - dxTotal * 0.16);
       }
     };
 
@@ -126,7 +133,7 @@ export function useCarouselScroll(itemCount: number): CarouselScroll {
   }, [itemCount]);
 
   useFrame(() => {
-    current.current += (target.current - current.current) * 0.08;
+    current.current += (target.current - current.current) * 0.18;
   });
 
   return { target, current, dragging };

@@ -5,30 +5,18 @@ import type { Book } from "../../types";
 import { Book3D } from "./Book3D";
 import { useCarouselScroll } from "./useCarouselScroll";
 
-const BOOK_SPACING = 2.5;
-const FOCUS_SCALE = 1.2;
+const BOOK_SPACING = 1.55;
+const FOCUS_SCALE = 1.25;
 const FOCUS_Z = 0.6;
 const CENTER_EPSILON = 0.04;
+const BOOK_BASE_Y_ROT = -Math.PI / 9;
+const BOOK_FOCUS_Y_ROT = -Math.PI / 14;
+const SIDE_FADE_DISTANCE = 4;
 
 interface BookCarouselProps {
   books: Book[];
   onFocus: (book: Book | null) => void;
   onOpen: (book: Book) => void;
-}
-
-function useDiagonalAngle() {
-  const [angle, setAngle] = useState(() =>
-    typeof window !== "undefined"
-      ? Math.atan2(window.innerHeight, window.innerWidth)
-      : Math.PI / 6
-  );
-  useEffect(() => {
-    const onResize = () =>
-      setAngle(Math.atan2(window.innerHeight, window.innerWidth));
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-  return angle;
 }
 
 function useIsDesktop() {
@@ -49,7 +37,6 @@ function CarouselScene({ books, onFocus, onOpen }: BookCarouselProps) {
     current: scrollCurrentRef,
     dragging: scrollDraggingRef,
   } = useCarouselScroll(books.length);
-  const angle = useDiagonalAngle();
   const isDesktop = useIsDesktop();
   const { viewport } = useThree();
   const groupRefs = useRef<Array<Group | null>>([]);
@@ -57,19 +44,12 @@ function CarouselScene({ books, onFocus, onOpen }: BookCarouselProps) {
   const lastFocusRef = useRef<number>(-1);
   const pendingOpen = useRef<{ book: Book; index: number } | null>(null);
 
-  const diagLen = useMemo(() => {
-    return Math.min(viewport.width, viewport.height) * 0.9;
-  }, [viewport.width, viewport.height]);
-
-  const dir = useMemo(
-    () => ({ x: Math.cos(-angle), y: Math.sin(-angle) }),
-    [angle]
-  );
-
-  // Offset so the focused book clears the preview panel (top-right on desktop,
-  // bottom on mobile).
-  const sceneOffsetY = isDesktop ? -1.4 : 1.1;
-  const sceneOffsetX = isDesktop ? -0.8 : 0;
+  // Desktop: preview card sits top-left, books sweep across the bottom.
+  // Mobile: preview sits bottom, books sit toward the top.
+  const sceneOffsetY = isDesktop
+    ? -viewport.height * 0.22
+    : viewport.height * 0.12;
+  const sceneOffsetX = 0;
 
   useFrame(() => {
     let closest = 0;
@@ -86,27 +66,28 @@ function CarouselScene({ books, onFocus, onOpen }: BookCarouselProps) {
       setFocusedIndex(closest);
     }
 
-    // Per-book spring-ish scale/z toward target
     for (let i = 0; i < books.length; i++) {
       const group = groupRefs.current[i];
       if (!group) continue;
       const isFocused = i === closest;
-      const targetScale = isFocused ? FOCUS_SCALE : 1;
-      const targetZ = isFocused ? FOCUS_Z : 0;
+      const distance = Math.abs(i - scrollCurrentRef.current);
+      const sideFade = Math.max(0, 1 - distance / SIDE_FADE_DISTANCE);
+      const baseScale = 0.85 + sideFade * 0.15;
+      const targetScale = isFocused ? FOCUS_SCALE : baseScale;
+      const targetZ = isFocused ? FOCUS_Z : -distance * 0.18;
+      const targetYRot = isFocused ? BOOK_FOCUS_Y_ROT : BOOK_BASE_Y_ROT;
+
       group.scale.x += (targetScale - group.scale.x) * 0.12;
       group.scale.y += (targetScale - group.scale.y) * 0.12;
       group.scale.z += (targetScale - group.scale.z) * 0.12;
 
       const offset = (i - scrollCurrentRef.current) * BOOK_SPACING;
-      const x = dir.x * offset;
-      const y = dir.y * offset;
-      group.position.x = x;
-      group.position.y = y;
+      group.position.x = offset;
+      group.position.y = 0;
       group.position.z += (targetZ - group.position.z) * 0.12;
-      group.rotation.z = -angle;
+      group.rotation.y += (targetYRot - group.rotation.y) * 0.12;
     }
 
-    // Resolve a pending open once the target book has settled near the center
     const pending = pendingOpen.current;
     if (pending) {
       const dist = Math.abs(scrollCurrentRef.current - pending.index);
@@ -136,20 +117,17 @@ function CarouselScene({ books, onFocus, onOpen }: BookCarouselProps) {
     pendingOpen.current = { book, index: idx };
   };
 
-  // Use diagLen to subtly fade books farther from the center (optional future polish)
-  void diagLen;
-
   return (
     <>
       <DustParticles />
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={0.55} />
       <directionalLight
-        position={[5, 10, 5]}
-        intensity={1.2}
+        position={[5, 8, 6]}
+        intensity={1.15}
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
-      <pointLight position={[-3, 5, 3]} intensity={0.8} color="#C9A96E" />
+      <pointLight position={[-4, 4, 4]} intensity={0.7} color="#C9A96E" />
       <group position={[sceneOffsetX, sceneOffsetY, 0]}>
         {books.map((book, i) => (
           <Book3D
@@ -159,7 +137,7 @@ function CarouselScene({ books, onFocus, onOpen }: BookCarouselProps) {
             }}
             book={book}
             position={[0, 0, 0]}
-            rotation={[0, 0, -angle]}
+            rotation={[0, BOOK_BASE_Y_ROT, 0]}
             scale={1}
             onSelect={handleSelect}
           />

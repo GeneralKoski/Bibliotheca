@@ -100,7 +100,7 @@ export const Book3D = memo(
 
     useFrame(() => {
       if (!hoverRef.current) return;
-      const target = hovered.current ? Math.PI / 12 : 0;
+      const target = hovered.current ? Math.PI / 24 : 0;
       hoverRef.current.rotation.y +=
         (target - hoverRef.current.rotation.y) * 0.12;
     });
@@ -128,7 +128,7 @@ export const Book3D = memo(
       >
         <group ref={hoverRef}>
           <mesh castShadow receiveShadow>
-            <boxGeometry args={[1.5, 2.2, 0.18]} />
+            <boxGeometry args={[1.15, 1.7, 0.16]} />
             {/* Material order: +X, -X, +Y, -Y, +Z, -Z */}
             <meshStandardMaterial
               attach="material-0"
