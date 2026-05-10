@@ -1,8 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import type { Book } from "../../types";
 import { getProceduralCoverDataUrl } from "../../utils/generateCover";
-import { BookReader } from "./BookReader/BookReader";
+
+const BookReader = lazy(() =>
+  import("./BookReader/BookReader").then((m) => ({ default: m.BookReader }))
+);
 
 interface BookModalProps {
   book: Book;
@@ -258,11 +261,21 @@ export function BookModal({
         )}
 
         {isReading && (
-          <BookReader
-            key={book.gutenbergId}
-            book={book}
-            onClose={() => setIsReading(false)}
-          />
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 z-50 bg-[#1a1610] flex items-center justify-center">
+                <span className="text-[10px] uppercase tracking-[0.32em] text-[#9a9286]">
+                  loading reader…
+                </span>
+              </div>
+            }
+          >
+            <BookReader
+              key={book.gutenbergId}
+              book={book}
+              onClose={() => setIsReading(false)}
+            />
+          </Suspense>
         )}
       </motion.div>
     </AnimatePresence>

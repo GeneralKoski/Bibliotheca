@@ -38,7 +38,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 - [ ] **Audit FPS** del carosello su laptop integrati e mobile mid-range.
 - [ ] **Lazy loading copertine OpenLibrary**: pre-caricare solo i libri visibili + N adiacenti, non tutti.
 - [x] **Compressione/ridimensionamento copertine procedurali**: `generateCoverTexture` viene chiamata in più punti (carousel, modal) — memoizzare globalmente.
-- [ ] **Code splitting**: `BookReader` + R3F del reader caricati on-demand quando si apre il modal (oggi importati eagermente).
+- [x] **Code splitting**: `BookReader` + R3F del reader caricati on-demand quando si apre il modal (oggi importati eagermente).
 - [ ] **Bundle size**: misurare e tree-shaking aggressivo su Three.js.
 
 ## Tecnico
