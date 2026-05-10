@@ -2,8 +2,15 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { ACESFilmicToneMapping } from "three";
 import type { Book } from "../../types";
 import { Room } from "./Room";
+import {
+  DustParticles,
+  FloorLamp,
+  Painting,
+  ReadingTable,
+} from "./RoomProps";
 import { ShelfRow } from "./ShelfRow";
 
 interface Room3DViewProps {
@@ -11,11 +18,11 @@ interface Room3DViewProps {
   onOpen: (book: Book) => void;
 }
 
-const ROOM_SIZE = 16;
-const ROOM_HEIGHT = 6;
+const ROOM_SIZE = 12;
+const ROOM_HEIGHT = 5;
 const SHELF_DEPTH = 0.4;
-const SHELF_HEIGHTS = [1.2, 2.4, 3.6, 4.8];
-const BOOKS_PER_SHELF = 14;
+const SHELF_HEIGHTS = [1.0, 2.05, 3.1, 4.05];
+const BOOKS_PER_SHELF = 12;
 
 export function Room3DView({ books, onOpen }: Room3DViewProps) {
   const [hovered, setHovered] = useState<Book | null>(null);
@@ -23,13 +30,9 @@ export function Room3DView({ books, onOpen }: Room3DViewProps) {
   const shelves = useMemo(() => {
     if (books.length === 0) return [];
     const totalShelves = Math.ceil(books.length / BOOKS_PER_SHELF);
-    const out: { book: Book; shelfIndex: number; slotIndex: number }[][] = [];
+    const out: Book[][] = [];
     for (let s = 0; s < totalShelves; s++) {
-      out.push(
-        books
-          .slice(s * BOOKS_PER_SHELF, (s + 1) * BOOKS_PER_SHELF)
-          .map((book, slotIndex) => ({ book, shelfIndex: s, slotIndex }))
-      );
+      out.push(books.slice(s * BOOKS_PER_SHELF, (s + 1) * BOOKS_PER_SHELF));
     }
     return out;
   }, [books]);
@@ -39,71 +42,97 @@ export function Room3DView({ books, onOpen }: Room3DViewProps) {
       <Canvas
         dpr={[1, 2]}
         shadows
-        camera={{ position: [0, 2.4, 10], fov: 55 }}
+        camera={{ position: [0, 2.0, 7.5], fov: 55 }}
+        gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
         style={{ position: "absolute", inset: 0 }}
       >
-        <color attach="background" args={["#0A0A0F"]} />
-        <fog attach="fog" args={["#0A0A0F", 12, 28]} />
-        <ambientLight intensity={0.45} />
+        <color attach="background" args={["#0d0805"]} />
+        <fog attach="fog" args={["#1a0d05", 6, 18]} />
+
+        <ambientLight intensity={0.18} color="#3a2a18" />
+        <hemisphereLight
+          intensity={0.25}
+          color="#d9a866"
+          groundColor="#1a0d05"
+        />
         <directionalLight
-          position={[6, 8, 6]}
-          intensity={1.0}
+          position={[-4, 5, 3]}
+          intensity={0.4}
+          color="#a8b8d0"
+        />
+        <pointLight
+          position={[0, ROOM_HEIGHT - 0.6, 1.5]}
+          intensity={2.4}
+          color="#f3a85c"
+          distance={10}
+          decay={1.8}
           castShadow
           shadow-mapSize={[1024, 1024]}
         />
-        <pointLight position={[0, 4.5, 0]} intensity={1.4} color="#C9A96E" />
-        <pointLight position={[-5, 2, 4]} intensity={0.6} color="#7a6a52" />
+        <pointLight
+          position={[ROOM_SIZE / 2 - 1.5, 1.6, ROOM_SIZE / 2 - 1.5]}
+          intensity={1.0}
+          color="#d97a3a"
+          distance={6}
+          decay={2}
+        />
 
         <Room size={ROOM_SIZE} height={ROOM_HEIGHT} />
+        <DustParticles count={240} />
 
-        {/* Back-wall shelves */}
+        <FloorLamp position={[ROOM_SIZE / 2 - 1.0, 0, ROOM_SIZE / 2 - 1.0]} />
+        <ReadingTable position={[0, 0, 1.2]} />
+        <Painting
+          position={[0, 4.0, -ROOM_SIZE / 2 + 0.06]}
+          rotation={[0, 0, 0]}
+          color="#3a2818"
+        />
+
         {shelves.slice(0, SHELF_HEIGHTS.length).map((row, idx) => (
           <ShelfRow
             key={`back-${idx}`}
-            books={row.map((r) => r.book)}
-            position={[0, SHELF_HEIGHTS[idx] ?? 1.2, -ROOM_SIZE / 2 + SHELF_DEPTH]}
+            books={row}
+            position={[0, SHELF_HEIGHTS[idx] ?? 1.0, -ROOM_SIZE / 2 + SHELF_DEPTH]}
             rotation={[0, 0, 0]}
-            width={ROOM_SIZE - 1}
+            width={ROOM_SIZE - 1.2}
             depth={SHELF_DEPTH}
             onSelect={onOpen}
             onHover={setHovered}
           />
         ))}
 
-        {/* Left-wall shelves */}
         {shelves
           .slice(SHELF_HEIGHTS.length, SHELF_HEIGHTS.length * 2)
           .map((row, idx) => (
             <ShelfRow
               key={`left-${idx}`}
-              books={row.map((r) => r.book)}
+              books={row}
               position={[
                 -ROOM_SIZE / 2 + SHELF_DEPTH,
-                SHELF_HEIGHTS[idx] ?? 1.2,
+                SHELF_HEIGHTS[idx] ?? 1.0,
                 0,
               ]}
               rotation={[0, Math.PI / 2, 0]}
-              width={ROOM_SIZE - 1}
+              width={ROOM_SIZE - 1.2}
               depth={SHELF_DEPTH}
               onSelect={onOpen}
               onHover={setHovered}
             />
           ))}
 
-        {/* Right-wall shelves */}
         {shelves
           .slice(SHELF_HEIGHTS.length * 2, SHELF_HEIGHTS.length * 3)
           .map((row, idx) => (
             <ShelfRow
               key={`right-${idx}`}
-              books={row.map((r) => r.book)}
+              books={row}
               position={[
                 ROOM_SIZE / 2 - SHELF_DEPTH,
-                SHELF_HEIGHTS[idx] ?? 1.2,
+                SHELF_HEIGHTS[idx] ?? 1.0,
                 0,
               ]}
               rotation={[0, -Math.PI / 2, 0]}
-              width={ROOM_SIZE - 1}
+              width={ROOM_SIZE - 1.2}
               depth={SHELF_DEPTH}
               onSelect={onOpen}
               onHover={setHovered}
@@ -114,12 +143,12 @@ export function Room3DView({ books, onOpen }: Room3DViewProps) {
           enablePan={false}
           enableZoom
           minDistance={3}
-          maxDistance={14}
-          minPolarAngle={Math.PI / 4}
+          maxDistance={11}
+          minPolarAngle={Math.PI / 3.5}
           maxPolarAngle={Math.PI / 2.05}
-          target={[0, 2.4, 0]}
-          rotateSpeed={0.6}
-          zoomSpeed={0.6}
+          target={[0, 2.0, 0]}
+          rotateSpeed={0.5}
+          zoomSpeed={0.5}
         />
       </Canvas>
 
@@ -127,7 +156,7 @@ export function Room3DView({ books, onOpen }: Room3DViewProps) {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-1 px-5 py-3 rounded-full bg-[#0A0A0F]/85 backdrop-blur border border-[#3a332a]"
+          className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-1 px-5 py-3 rounded-full bg-[#0A0A0F]/85 backdrop-blur border"
           style={{ borderColor: hovered.color }}
         >
           <span className="font-display text-[16px] text-[#E8E0D0]">
