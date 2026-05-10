@@ -1,5 +1,15 @@
 import type { Book } from "../types";
 
+const proceduralCoverDataUrlCache = new Map<number, string>();
+
+export function getProceduralCoverDataUrl(book: Book): string {
+  const cached = proceduralCoverDataUrlCache.get(book.id);
+  if (cached) return cached;
+  const url = generateCoverTexture(book).toDataURL("image/png");
+  proceduralCoverDataUrlCache.set(book.id, url);
+  return url;
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }

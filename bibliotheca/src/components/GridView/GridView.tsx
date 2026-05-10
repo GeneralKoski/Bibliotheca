@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import type { Book } from "../../types";
-import { generateCoverTexture } from "../../utils/generateCover";
+import { getProceduralCoverDataUrl } from "../../utils/generateCover";
 
 interface GridViewProps {
   books: Book[];
@@ -35,7 +35,7 @@ function GridCard({
   onOpen: () => void;
 }) {
   const proceduralUrl = useMemo(
-    () => generateCoverTexture(book).toDataURL("image/png"),
+    () => getProceduralCoverDataUrl(book),
     [book]
   );
   const [src, setSrc] = useState(

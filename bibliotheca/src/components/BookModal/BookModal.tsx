@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Book } from "../../types";
-import { generateCoverTexture } from "../../utils/generateCover";
+import { getProceduralCoverDataUrl } from "../../utils/generateCover";
 import { BookReader } from "./BookReader/BookReader";
 
 interface BookModalProps {
@@ -52,9 +52,10 @@ export function BookModal({
 }: BookModalProps) {
   const [isReading, setIsReading] = useState(false);
 
-  const proceduralDataUrl = useMemo(() => {
-    return generateCoverTexture(book).toDataURL("image/png");
-  }, [book]);
+  const proceduralDataUrl = useMemo(
+    () => getProceduralCoverDataUrl(book),
+    [book]
+  );
 
   const [coverSrc, setCoverSrc] = useState<string>(
     book.coverId != null
