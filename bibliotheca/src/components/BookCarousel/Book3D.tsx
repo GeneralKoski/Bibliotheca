@@ -21,6 +21,7 @@ interface Book3DProps {
   position: [number, number, number];
   rotation: [number, number, number];
   scale: number;
+  nearby: boolean;
   onSelect: (book: Book) => void;
 }
 
@@ -54,17 +55,25 @@ function useBookTextures(book: Book) {
 
 export const Book3D = memo(
   forwardRef<Group, Book3DProps>(function Book3D(
-    { book, position, rotation, scale, onSelect },
+    { book, position, rotation, scale, nearby, onSelect },
     ref
   ) {
     const textures = useBookTextures(book);
     const [frontTexture, setFrontTexture] = useState<Texture>(textures.front);
     const hoverRef = useRef<Group>(null);
     const hovered = useRef(false);
+    const remoteLoadedRef = useRef(false);
 
     useEffect(() => {
       setFrontTexture(textures.front);
+      remoteLoadedRef.current = false;
+    }, [book.coverId, textures.front]);
+
+    useEffect(() => {
+      if (!nearby) return;
       if (book.coverId == null) return;
+      if (remoteLoadedRef.current) return;
+      remoteLoadedRef.current = true;
       const loader = new TextureLoader();
       loader.setCrossOrigin("anonymous");
       let cancelled = false;
@@ -81,13 +90,13 @@ export const Book3D = memo(
         },
         undefined,
         () => {
-          // keep procedural
+          remoteLoadedRef.current = false;
         }
       );
       return () => {
         cancelled = true;
       };
-    }, [book.coverId, textures.front]);
+    }, [nearby, book.coverId]);
 
     useEffect(() => {
       return () => {

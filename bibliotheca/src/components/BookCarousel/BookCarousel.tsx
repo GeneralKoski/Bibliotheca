@@ -12,6 +12,7 @@ const CENTER_EPSILON = 0.04;
 const BOOK_BASE_Y_ROT = -Math.PI / 9;
 const BOOK_FOCUS_Y_ROT = -Math.PI / 14;
 const SIDE_FADE_DISTANCE = 4;
+const COVER_LOAD_RADIUS = 6;
 
 interface BookCarouselProps {
   books: Book[];
@@ -139,6 +140,7 @@ function CarouselScene({ books, onFocus, onOpen }: BookCarouselProps) {
             position={[0, 0, 0]}
             rotation={[0, BOOK_BASE_Y_ROT, 0]}
             scale={1}
+            nearby={Math.abs(i - focusedIndex) <= COVER_LOAD_RADIUS}
             onSelect={handleSelect}
           />
         ))}
