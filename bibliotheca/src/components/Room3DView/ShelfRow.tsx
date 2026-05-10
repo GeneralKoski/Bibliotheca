@@ -13,6 +13,7 @@ interface ShelfRowProps {
   rotation: [number, number, number];
   width: number;
   depth: number;
+  slotsPerShelf: number;
   onSelect: (book: Book) => void;
   onHover: (book: Book | null) => void;
 }
@@ -27,10 +28,11 @@ export function ShelfRow({
   rotation,
   width,
   depth,
+  slotsPerShelf,
   onSelect,
   onHover,
 }: ShelfRowProps) {
-  const slotWidth = width / Math.max(books.length, 1);
+  const slotWidth = width / slotsPerShelf;
 
   return (
     <group position={position} rotation={rotation}>
@@ -66,7 +68,7 @@ export function ShelfRow({
             0,
             BOOK_DEPTH / 2 - depth / 2 + 0.02,
           ]}
-          slotWidth={slotWidth * 0.94}
+          slotWidth={slotWidth * 0.96}
           onSelect={onSelect}
           onHover={onHover}
         />
@@ -95,7 +97,7 @@ function ShelvedBook({
   const groupRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
 
-  const { spine, front, height, tilt, depthVar } = useMemo(() => {
+  const { spine, front, height } = useMemo(() => {
     const sp = new CanvasTexture(generateSpineTexture(book));
     sp.colorSpace = SRGBColorSpace;
     sp.anisotropy = 8;
@@ -104,17 +106,12 @@ function ShelvedBook({
     fr.anisotropy = 8;
     const seed = book.id * 9301 + 49297;
     const rand = (n: number) => ((seed * (n + 1)) % 1000) / 1000;
-    const heightFactor = 0.78 + rand(1) * 0.32;
-    // Occasional leaning book — only ~1 in 6
-    const willTilt = rand(2) < 0.18;
-    const tilt = willTilt ? (rand(3) - 0.5) * 0.18 : 0;
-    const depthVar = 0.92 + rand(4) * 0.16;
+    // Subtle height variation only — 92% to 102% of base
+    const heightFactor = 0.92 + rand(1) * 0.1;
     return {
       spine: sp,
       front: fr,
       height: BOOK_BASE_HEIGHT * heightFactor,
-      tilt,
-      depthVar,
     };
   }, [book]);
 
@@ -139,7 +136,6 @@ function ShelvedBook({
         position[1] - (BOOK_BASE_HEIGHT - height) / 2,
         position[2],
       ]}
-      rotation={[0, 0, tilt]}
       onPointerOver={(e) => {
         e.stopPropagation();
         setHovered(true);
@@ -158,7 +154,7 @@ function ShelvedBook({
       }}
     >
       <mesh castShadow receiveShadow>
-        <boxGeometry args={[slotWidth, height, BOOK_DEPTH * depthVar]} />
+        <boxGeometry args={[slotWidth, height, BOOK_DEPTH]} />
         <meshStandardMaterial
           attach="material-0"
           color={book.color}

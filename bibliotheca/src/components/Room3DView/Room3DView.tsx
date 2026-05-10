@@ -118,6 +118,7 @@ export function Room3DView({ books, onOpen }: Room3DViewProps) {
             rotation={[0, 0, 0]}
             width={ROOM_SIZE - 1.2}
             depth={SHELF_DEPTH}
+            slotsPerShelf={BOOKS_PER_SHELF}
             onSelect={onOpen}
             onHover={setHovered}
           />
