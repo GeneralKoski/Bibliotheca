@@ -8,7 +8,25 @@ import { PreviewPanel } from "./components/PreviewPanel/PreviewPanel";
 import { BookModal } from "./components/BookModal/BookModal";
 import { FlippingBookLoader } from "./components/FlippingBookLoader";
 import type { Book } from "./types";
+import { loadLastOpened, saveLastOpened } from "./utils/lastOpened";
 import { type BookStatus, STATUS_LABELS, STATUS_ORDER } from "./utils/library";
+
+type SortMode =
+  | "default"
+  | "year-desc"
+  | "year-asc"
+  | "author"
+  | "rating"
+  | "last-opened";
+
+const SORT_OPTIONS: { id: SortMode; label: string }[] = [
+  { id: "default", label: "Default" },
+  { id: "year-desc", label: "Year ↓" },
+  { id: "year-asc", label: "Year ↑" },
+  { id: "author", label: "Author A–Z" },
+  { id: "rating", label: "My rating" },
+  { id: "last-opened", label: "Last opened" },
+];
 
 interface CategoryEntry {
   name: string;
@@ -109,6 +127,76 @@ function CategorySelect({
   );
 }
 
+function SortSelect({
+  value,
+  onChange,
+}: {
+  value: SortMode;
+  onChange: (v: SortMode) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  const current = SORT_OPTIONS.find((o) => o.id === value) ?? SORT_OPTIONS[0];
+
+  return (
+    <div ref={wrapRef} className="relative pointer-events-auto">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-[#cdc5b5] py-2 px-1 border-b border-[#3a332a] hover:border-[#9a9286] focus-visible:border-[#C9A96E] outline-none transition-colors min-w-[150px]"
+      >
+        <span className="flex-1 text-left truncate">Sort · {current.label}</span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="text-[8px] text-[#9a9286]"
+        >
+          ▾
+        </motion.span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute top-full mt-3 left-0 bg-[#0A0A0F]/95 backdrop-blur-xl border border-[#3a332a] rounded-lg py-2 min-w-[200px] z-50 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => {
+                  onChange(opt.id);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-4 py-2 text-[10px] uppercase tracking-[0.28em] hover:bg-white/[0.04] transition-colors ${
+                  value === opt.id ? "text-[#C9A96E]" : "text-[#cdc5b5]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function StatusFilter({
   active,
   counts,
@@ -157,6 +245,8 @@ function SearchFilter({
   statusFilter,
   statusCounts,
   onStatusChange,
+  sortMode,
+  onSortChange,
 }: {
   searchQuery: string;
   onSearchChange: (s: string) => void;
@@ -167,6 +257,8 @@ function SearchFilter({
   statusFilter: BookStatus | null;
   statusCounts: Record<BookStatus, number>;
   onStatusChange: (v: BookStatus | null) => void;
+  sortMode: SortMode;
+  onSortChange: (v: SortMode) => void;
 }) {
   return (
     <div className="hidden md:flex absolute top-20 left-1/2 -translate-x-1/2 z-20 items-center gap-6 pointer-events-none">
@@ -198,6 +290,8 @@ function SearchFilter({
         counts={statusCounts}
         onChange={onStatusChange}
       />
+      <span aria-hidden className="h-3 w-px bg-[#3a332a]" />
+      <SortSelect value={sortMode} onChange={onSortChange} />
     </div>
   );
 }
@@ -315,7 +409,11 @@ function LoadingScreen() {
 function App() {
   const { books, loading, hydrateBookById } = useBooks();
   const { statusMap, getStatus, setStatus } = useLibraryStatus();
-  const { getRating, setRating } = usePersonalRatings();
+  const { getRating, setRating, ratings } = usePersonalRatings();
+  const [lastOpened, setLastOpened] = useState<Record<number, number>>(() =>
+    loadLastOpened()
+  );
+  const [sortMode, setSortMode] = useState<SortMode>("default");
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
   const [openBookId, setOpenBookId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -363,8 +461,42 @@ function App() {
           b.tags.some((t) => t.toLowerCase().includes(q))
       );
     }
+    if (sortMode !== "default") {
+      const sorted = [...result];
+      switch (sortMode) {
+        case "year-desc":
+          sorted.sort((a, b) => b.year - a.year);
+          break;
+        case "year-asc":
+          sorted.sort((a, b) => a.year - b.year);
+          break;
+        case "author":
+          sorted.sort((a, b) => a.author.localeCompare(b.author));
+          break;
+        case "rating":
+          sorted.sort(
+            (a, b) => (ratings[b.id] ?? 0) - (ratings[a.id] ?? 0)
+          );
+          break;
+        case "last-opened":
+          sorted.sort(
+            (a, b) => (lastOpened[b.id] ?? 0) - (lastOpened[a.id] ?? 0)
+          );
+          break;
+      }
+      result = sorted;
+    }
     return result;
-  }, [books, activeCategory, statusFilter, statusMap, searchQuery]);
+  }, [
+    books,
+    activeCategory,
+    statusFilter,
+    statusMap,
+    searchQuery,
+    sortMode,
+    ratings,
+    lastOpened,
+  ]);
 
   const selectedBook = useMemo(
     () => filteredBooks.find((book) => book.id === selectedBookId) ?? null,
@@ -396,6 +528,11 @@ function App() {
   useEffect(() => {
     if (openBookId != null) {
       hydrateBookById(openBookId);
+      setLastOpened((prev) => {
+        const next = { ...prev, [openBookId]: Date.now() };
+        saveLastOpened(next);
+        return next;
+      });
     }
   }, [openBookId, hydrateBookById]);
 
@@ -435,6 +572,8 @@ function App() {
         statusFilter={statusFilter}
         statusCounts={statusCounts}
         onStatusChange={setStatusFilter}
+        sortMode={sortMode}
+        onSortChange={setSortMode}
       />
       {!isEmpty && (
         <PreviewPanel

@@ -20,7 +20,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 - [x] **Stato libro**: *letto / in lettura / wishlist* con badge sul carosello e filtro dedicato (persistenza localStorage).
 - [x] **Rating personale** distinto da quello dei dati statici.
 - [x] **Citazioni preferite** salvate dalla vista reader con back-link alla pagina.
-- [ ] **Sort esplicito**: anno, autore, rating, ultimo aperto (oggi solo filtro categoria + search).
+- [x] **Sort esplicito**: anno, autore, rating, ultimo aperto (oggi solo filtro categoria + search).
 
 ## UX / Design
 
