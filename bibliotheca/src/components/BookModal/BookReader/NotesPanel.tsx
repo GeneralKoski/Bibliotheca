@@ -11,7 +11,6 @@ interface NotesPanelProps {
   onJump: (spread: number) => void;
   onAdd: (text: string, quote?: string) => void;
   onRemove: (id: string) => void;
-  onExport: () => void;
 }
 
 function pageRange(spread: number, totalPages: number): string {
@@ -31,7 +30,6 @@ export function NotesPanel({
   onJump,
   onAdd,
   onRemove,
-  onExport,
 }: NotesPanelProps) {
   const [text, setText] = useState("");
   const [quote, setQuote] = useState("");
@@ -58,24 +56,14 @@ export function NotesPanel({
             <span className="text-[10px] uppercase tracking-[0.32em] text-[#cdc5b5]">
               Notes & Quotes
             </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={onExport}
-                disabled={notes.length === 0}
-                className="px-3 py-1.5 rounded-full text-[9px] uppercase tracking-[0.28em] text-[#C9A96E] hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-              >
-                Export .md
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close notes"
-                className="w-8 h-8 rounded-full text-[#9a9286] hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center"
-              >
-                ×
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close notes"
+              className="w-8 h-8 rounded-full text-[#9a9286] hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center"
+            >
+              ×
+            </button>
           </div>
 
           <div className="flex border-b border-white/5">

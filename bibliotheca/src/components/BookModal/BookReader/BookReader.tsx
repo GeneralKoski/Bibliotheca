@@ -20,10 +20,8 @@ import {
 } from "../../../utils/bookmarks";
 import {
   type BookNote,
-  downloadMarkdown,
   loadNotes,
   makeNoteId,
-  notesToMarkdown,
   saveNotes,
 } from "../../../utils/notes";
 import {
@@ -508,6 +506,10 @@ export function BookReader({ book, onClose }: BookReaderProps) {
     soundOnRef.current = soundOn;
     setPageSoundEnabled(soundOn);
   }, [soundOn]);
+  const handleSoundChange = useCallback((enabled: boolean) => {
+    setSoundOn(enabled);
+    if (enabled) playPageFlip();
+  }, []);
 
   const lastSpreadForSoundRef = useRef(currentSpread);
   useEffect(() => {
@@ -560,12 +562,6 @@ export function BookReader({ book, onClose }: BookReaderProps) {
     [displayPages, currentSpread]
   );
   const remainingLabel = formatRemaining(remaining / Math.max(1, wpm));
-
-  const exportNotes = useCallback(() => {
-    const md = notesToMarkdown(book.title, book.author, notes);
-    const safe = book.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    downloadMarkdown(`${safe || "book"}-notes.md`, md);
-  }, [book, notes]);
 
   useEffect(() => {
     saveBookmarks(book.gutenbergId, bookmarks);
@@ -1019,7 +1015,7 @@ export function BookReader({ book, onClose }: BookReaderProps) {
         }
         onFontChange={(fontId) => setReaderPrefs((p) => ({ ...p, fontId }))}
         onSizeChange={(sizeId) => setReaderPrefs((p) => ({ ...p, sizeId }))}
-        onSoundChange={setSoundOn}
+        onSoundChange={handleSoundChange}
       />
 
       <NotesPanel
@@ -1034,7 +1030,6 @@ export function BookReader({ book, onClose }: BookReaderProps) {
         }}
         onAdd={addNote}
         onRemove={removeNote}
-        onExport={exportNotes}
       />
     </motion.div>
   );

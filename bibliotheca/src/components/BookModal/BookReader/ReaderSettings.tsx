@@ -140,13 +140,13 @@ export function ReaderSettings({
                 Page-flip sound
               </span>
               <span
-                className={`relative w-9 h-5 rounded-full transition-colors ${
-                  soundEnabled ? "bg-[#C9A96E]" : "bg-white/10"
+                className={`relative w-11 h-6 rounded-full transition-colors ${
+                  soundEnabled ? "bg-[#C9A96E]" : "bg-white/15"
                 }`}
               >
                 <span
-                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                    soundEnabled ? "translate-x-4" : "translate-x-0.5"
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ease-out ${
+                    soundEnabled ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
               </span>

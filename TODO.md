@@ -10,7 +10,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 - [x] **Bookmark multipli per libro** con etichetta opzionale, mostrati in una sidebar del reader.
 - [x] **Ricerca testo dentro il libro** (Cmd/Ctrl+F custom): match nelle pagine con jump diretto.
 - [x] **Indice capitoli**: parsing dell'header Gutenberg per estrarre capitoli e mostrarli in un menu navigabile.
-- [x] **Note / highlight per pagina** salvate in localStorage, esportabili in markdown.
+- [x] **Note / highlight per pagina** salvate in localStorage. _(export markdown rimosso)_
 - [x] **Stima tempo di lettura rimanente** in base a parole/min impostabile.
 - [x] **Theme reader**: alternative al fondo crema attuale (sepia, dark, alto contrasto), font size e font family configurabili.
 - [x] **Cache offline**: salvare i testi Gutenberg già scaricati in IndexedDB per riapertura senza rete.
