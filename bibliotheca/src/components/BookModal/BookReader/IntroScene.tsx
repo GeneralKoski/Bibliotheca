@@ -13,6 +13,7 @@ import {
 import type { Book } from "../../../types";
 import { buildPageCanvas } from "./buildPageCanvas";
 import { PageMesh } from "./PageMesh";
+import { useReaderStyle } from "./readerStyle";
 
 const PAGE_W = 3;
 const PAGE_H = 4;
@@ -92,6 +93,7 @@ function IntroFlipPageLoop({
   const groupRef = useRef<Group>(null);
   const frontMatRef = useRef<import("three").MeshStandardMaterial | null>(null);
   const backMatRef = useRef<import("three").MeshStandardMaterial | null>(null);
+  const style = useReaderStyle();
 
   const { frontGeom, backGeom, frontTex, backTex, initialPositions } = useMemo(
     () => {
@@ -103,6 +105,7 @@ function IntroFlipPageLoop({
           pageNumber: frontPageNumber,
           totalPages,
           bookTitle,
+          style,
         }),
         false,
       );
@@ -112,6 +115,7 @@ function IntroFlipPageLoop({
           pageNumber: backPageNumber,
           totalPages,
           bookTitle,
+          style,
         }),
         true,
       );
@@ -126,7 +130,7 @@ function IntroFlipPageLoop({
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [style],
   );
 
   useEffect(() => {

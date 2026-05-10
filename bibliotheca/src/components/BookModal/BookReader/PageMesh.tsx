@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { CanvasTexture, SRGBColorSpace } from "three";
 import { buildPageCanvas } from "./buildPageCanvas";
+import { useReaderStyle } from "./readerStyle";
 
 interface PageMeshProps {
   text: string;
@@ -17,14 +18,15 @@ export function PageMesh({
   bookTitle,
   position,
 }: PageMeshProps) {
+  const style = useReaderStyle();
   const texture = useMemo(() => {
     const t = new CanvasTexture(
-      buildPageCanvas({ text, pageNumber, totalPages, bookTitle })
+      buildPageCanvas({ text, pageNumber, totalPages, bookTitle, style })
     );
     t.colorSpace = SRGBColorSpace;
     t.anisotropy = 8;
     return t;
-  }, [text, pageNumber, totalPages, bookTitle]);
+  }, [text, pageNumber, totalPages, bookTitle, style]);
 
   useEffect(() => {
     return () => texture.dispose();

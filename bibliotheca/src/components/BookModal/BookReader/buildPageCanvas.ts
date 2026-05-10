@@ -1,16 +1,35 @@
+import type { ReaderStyle } from "./readerStyle";
+
 interface PageTextureOptions {
   text: string;
   pageNumber: number;
   totalPages: number;
   bookTitle: string;
+  style?: ReaderStyle;
 }
+
+const FALLBACK_THEME = {
+  bgTop: "#F7F1E4",
+  bgBottom: "#EFE7D4",
+  textColor: "#1a1a1a",
+  metaColor: "#7a6a52",
+  borderColor: "rgba(74, 55, 40, 0.15)",
+};
+
+const FALLBACK_FONT = '"Inter", sans-serif';
+const FALLBACK_SIZE = { basePx: 18, lineHeightPx: 26, metaPx: 14 };
 
 export function buildPageCanvas({
   text,
   pageNumber,
   totalPages,
   bookTitle,
+  style,
 }: PageTextureOptions): HTMLCanvasElement {
+  const theme = style?.theme ?? FALLBACK_THEME;
+  const fontFamily = style?.font.family ?? FALLBACK_FONT;
+  const size = style?.size ?? FALLBACK_SIZE;
+
   const canvas = document.createElement("canvas");
   canvas.width = 512;
   canvas.height = 768;
@@ -18,26 +37,26 @@ export function buildPageCanvas({
   if (!ctx) return canvas;
 
   const bg = ctx.createLinearGradient(0, 0, 0, 768);
-  bg.addColorStop(0, "#F7F1E4");
-  bg.addColorStop(1, "#EFE7D4");
+  bg.addColorStop(0, theme.bgTop);
+  bg.addColorStop(1, theme.bgBottom);
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, 512, 768);
 
-  ctx.strokeStyle = "rgba(74, 55, 40, 0.15)";
+  ctx.strokeStyle = theme.borderColor;
   ctx.lineWidth = 1;
   ctx.strokeRect(36, 36, 512 - 72, 768 - 72);
 
-  ctx.fillStyle = "#7a6a52";
-  ctx.font = '400 14px "Inter", sans-serif';
+  ctx.fillStyle = theme.metaColor;
+  ctx.font = `400 ${size.metaPx}px ${fontFamily}`;
   ctx.textAlign = "left";
   ctx.fillText(bookTitle, 48, 56);
   ctx.textAlign = "right";
   ctx.fillText(`${pageNumber} / ${totalPages}`, 512 - 48, 56);
 
-  ctx.fillStyle = "#1a1a1a";
-  ctx.font = '400 18px "Inter", sans-serif';
+  ctx.fillStyle = theme.textColor;
+  ctx.font = `400 ${size.basePx}px ${fontFamily}`;
   ctx.textAlign = "left";
-  const lineHeight = 26;
+  const lineHeight = size.lineHeightPx;
   const marginX = 56;
   const marginTop = 96;
   const maxWidth = 512 - marginX * 2;

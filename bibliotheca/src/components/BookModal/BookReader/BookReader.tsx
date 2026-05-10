@@ -39,6 +39,14 @@ import { ChaptersPanel } from "./ChaptersPanel";
 import { extractChapters } from "./extractChapters";
 import { IntroScene } from "./IntroScene";
 import { NotesPanel } from "./NotesPanel";
+import {
+  ReaderStyleContext,
+  loadReaderPrefs,
+  resolveStyle,
+  saveReaderPrefs,
+  useReaderStyle,
+} from "./readerStyle";
+import { ReaderSettings } from "./ReaderSettings";
 import { SearchPanel } from "./SearchPanel";
 import { buildPageCanvas } from "./buildPageCanvas";
 import { PageMesh } from "./PageMesh";
@@ -110,6 +118,7 @@ function FlipPage({
   const groupRef = useRef<Group>(null);
   const tiltSmoothRef = useRef(0);
   const isMulti = leafCount > 1;
+  const style = useReaderStyle();
 
   const { frontGeom, backGeom, frontTex, backTex, initialPositions } = useMemo(() => {
     const frontGeom = makeFlipGeometry();
@@ -120,6 +129,7 @@ function FlipPage({
         pageNumber: frontPageNumber,
         totalPages,
         bookTitle,
+        style,
       }),
       false
     );
@@ -129,13 +139,14 @@ function FlipPage({
         pageNumber: backPageNumber,
         totalPages,
         bookTitle,
+        style,
       }),
       true
     );
     const posAttr = frontGeom.attributes.position as BufferAttribute;
     const initialPositions = new Float32Array(posAttr.array);
     return { frontGeom, backGeom, frontTex, backTex, initialPositions };
-  }, [frontText, backText, frontPageNumber, backPageNumber, totalPages, bookTitle]);
+  }, [frontText, backText, frontPageNumber, backPageNumber, totalPages, bookTitle, style]);
 
   useEffect(() => {
     return () => {
@@ -478,6 +489,13 @@ export function BookReader({ book, onClose }: BookReaderProps) {
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [chaptersOpen, setChaptersOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const [readerPrefs, setReaderPrefs] = useState(() => loadReaderPrefs());
+  useEffect(() => {
+    saveReaderPrefs(readerPrefs);
+  }, [readerPrefs]);
+  const readerStyle = useMemo(() => resolveStyle(readerPrefs), [readerPrefs]);
 
   const chapters = useMemo(() => extractChapters(displayPages), [displayPages]);
 
@@ -702,7 +720,8 @@ export function BookReader({ book, onClose }: BookReaderProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-50 bg-[#1a1610] flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center transition-colors duration-500"
+      style={{ backgroundColor: readerStyle.theme.panelTint }}
       role="document"
       aria-label={`Reader for ${book.title}`}
     >
@@ -764,6 +783,15 @@ export function BookReader({ book, onClose }: BookReaderProps) {
             <span aria-hidden>✎</span>
             <span>{notes.length}</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen((o) => !o)}
+            aria-label="Reader settings"
+            aria-pressed={settingsOpen}
+            className="absolute top-6 right-[230px] z-20 w-11 h-11 rounded-full border border-white/10 bg-black/50 text-[#E8E0D0] hover:bg-white/10 transition-colors flex items-center justify-center text-[14px]"
+          >
+            <span aria-hidden>Aa</span>
+          </button>
         </>
       )}
 
@@ -808,28 +836,30 @@ export function BookReader({ book, onClose }: BookReaderProps) {
           style={{ width: "100%", height: "100%" }}
           shadows
         >
-          {introDone ? (
-            <ReaderScene
-              pages={displayPages}
-              bookTitle={book.title}
-              currentSpread={currentSpread}
-              direction={direction}
-              progressRef={progressRef}
-              tiltRef={tiltRef}
-              multiFlipCount={multiFlipCount}
-            />
-          ) : (
-            <IntroScene
-              book={book}
-              ready={!loading}
-              leftPageText={introLeftText}
-              rightPageText={introRightText}
-              leftPageNumber={1}
-              rightPageNumber={2}
-              totalPages={!loading ? displayPages.length : 320}
-              onDone={() => setIntroAnimationDone(true)}
-            />
-          )}
+          <ReaderStyleContext.Provider value={readerStyle}>
+            {introDone ? (
+              <ReaderScene
+                pages={displayPages}
+                bookTitle={book.title}
+                currentSpread={currentSpread}
+                direction={direction}
+                progressRef={progressRef}
+                tiltRef={tiltRef}
+                multiFlipCount={multiFlipCount}
+              />
+            ) : (
+              <IntroScene
+                book={book}
+                ready={!loading}
+                leftPageText={introLeftText}
+                rightPageText={introRightText}
+                leftPageNumber={1}
+                rightPageNumber={2}
+                totalPages={!loading ? displayPages.length : 320}
+                onDone={() => setIntroAnimationDone(true)}
+              />
+            )}
+          </ReaderStyleContext.Provider>
         </Canvas>
       </div>
 
@@ -953,6 +983,19 @@ export function BookReader({ book, onClose }: BookReaderProps) {
           goTo(spread);
           setChaptersOpen(false);
         }}
+      />
+
+      <ReaderSettings
+        open={settingsOpen && introDone}
+        themeId={readerPrefs.themeId}
+        fontId={readerPrefs.fontId}
+        sizeId={readerPrefs.sizeId}
+        onClose={() => setSettingsOpen(false)}
+        onThemeChange={(themeId) =>
+          setReaderPrefs((p) => ({ ...p, themeId }))
+        }
+        onFontChange={(fontId) => setReaderPrefs((p) => ({ ...p, fontId }))}
+        onSizeChange={(sizeId) => setReaderPrefs((p) => ({ ...p, sizeId }))}
       />
 
       <NotesPanel
