@@ -12,6 +12,7 @@ import {
   type Group,
 } from "three";
 import type { Book } from "../../../types";
+import { loadProgress, saveProgress } from "../../../utils/readingProgress";
 import { IntroScene } from "./IntroScene";
 import { buildPageCanvas } from "./buildPageCanvas";
 import { PageMesh } from "./PageMesh";
@@ -425,10 +426,25 @@ export function BookReader({ book, onClose }: BookReaderProps) {
     flipForward,
     flipBackward,
     goTo,
+    jumpTo,
     startDrag,
     updateDrag,
     endDrag,
   } = usePageFlip(displayPages.length);
+
+  const progressRestoredRef = useRef(false);
+  useEffect(() => {
+    if (progressRestoredRef.current) return;
+    if (loading) return;
+    progressRestoredRef.current = true;
+    const saved = loadProgress(book.gutenbergId);
+    if (saved > 0) jumpTo(saved);
+  }, [loading, book.gutenbergId, jumpTo]);
+
+  useEffect(() => {
+    if (!progressRestoredRef.current) return;
+    saveProgress(book.gutenbergId, currentSpread);
+  }, [book.gutenbergId, currentSpread]);
 
   const leftPageNum = currentSpread * 2 + 1;
   const rightPageNum = Math.min(leftPageNum + 1, displayPages.length);

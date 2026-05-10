@@ -38,6 +38,7 @@ export interface PageFlip {
   flipForward: () => void;
   flipBackward: () => void;
   goTo: (spread: number) => void;
+  jumpTo: (spread: number) => void;
   startDrag: (dir: "forward" | "backward") => boolean;
   updateDrag: (progress: number) => void;
   endDrag: (commit: boolean) => void;
@@ -83,6 +84,16 @@ export function usePageFlip(totalPages: number): PageFlip {
     progressRef.current = 0;
     setDir("backward");
   }, [currentSpread, totalSpreads]);
+
+  const jumpTo = useCallback(
+    (spread: number) => {
+      if (directionRef.current || dragActiveRef.current) return;
+      cancelRaf();
+      const clamped = Math.max(0, Math.min(totalSpreads - 1, spread));
+      setCurrentSpread(clamped);
+    },
+    [totalSpreads]
+  );
 
   const goTo = useCallback(
     (spread: number) => {
@@ -211,6 +222,7 @@ export function usePageFlip(totalPages: number): PageFlip {
     flipForward,
     flipBackward,
     goTo,
+    jumpTo,
     startDrag,
     updateDrag,
     endDrag,
