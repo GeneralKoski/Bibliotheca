@@ -43,7 +43,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 
 ## Tecnico
 
-- [ ] **Error boundary** per crash WebGL (alcuni device disabilitano WebGL → app bianca).
+- [x] **Error boundary** per crash WebGL (alcuni device disabilitano WebGL → app bianca).
 - [ ] **Test**: smoke test con Vitest su `useBooks`, filtri, `usePageFlip`.
 - [ ] **CI**: GitHub Action con lint + build + type-check su PR.
 - [ ] **Deploy**: pipeline Vercel/Netlify con preview deploy per branch.

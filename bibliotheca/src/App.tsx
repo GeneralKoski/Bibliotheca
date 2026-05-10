@@ -4,6 +4,7 @@ import { useBooks } from "./hooks/useBooks";
 import { useLibraryStatus } from "./hooks/useLibraryStatus";
 import { usePersonalRatings } from "./hooks/usePersonalRatings";
 import { BookCarousel } from "./components/BookCarousel/BookCarousel";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GridView } from "./components/GridView/GridView";
 import { PreviewPanel } from "./components/PreviewPanel/PreviewPanel";
 import { BookModal } from "./components/BookModal/BookModal";
@@ -833,11 +834,20 @@ function App() {
         }}
       />
       {viewMode === "carousel" ? (
-        <BookCarousel
-          books={filteredBooks}
-          onFocus={(book) => setSelectedBookId(book?.id ?? null)}
-          onOpen={(book) => setOpenBookId(book.id)}
-        />
+        <ErrorBoundary
+          fallback={() => (
+            <GridView
+              books={filteredBooks}
+              onOpen={(book) => setOpenBookId(book.id)}
+            />
+          )}
+        >
+          <BookCarousel
+            books={filteredBooks}
+            onFocus={(book) => setSelectedBookId(book?.id ?? null)}
+            onOpen={(book) => setOpenBookId(book.id)}
+          />
+        </ErrorBoundary>
       ) : (
         <GridView
           books={filteredBooks}
