@@ -471,6 +471,62 @@ function Chip({
   );
 }
 
+const ONBOARDING_KEY = "bibliotheca:onboarded";
+
+function OnboardingHint() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(ONBOARDING_KEY)) {
+        const t = setTimeout(() => setVisible(true), 800);
+        return () => clearTimeout(t);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+  const dismiss = () => {
+    setVisible(false);
+    try {
+      localStorage.setItem(ONBOARDING_KEY, "1");
+    } catch {
+      // ignore
+    }
+  };
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute bottom-7 left-1/2 -translate-x-1/2 z-30 pointer-events-auto"
+        >
+          <button
+            type="button"
+            onClick={dismiss}
+            className="group flex items-center gap-3 px-5 py-3 rounded-full border border-[#3a332a] bg-[#0A0A0F]/80 backdrop-blur-md text-[#cdc5b5] text-[10px] uppercase tracking-[0.32em] hover:border-[#C9A96E] hover:text-[#E8E0D0] transition-colors"
+          >
+            <motion.span
+              aria-hidden
+              animate={{ x: [-2, 2, -2] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              className="text-[#C9A96E]"
+            >
+              ←  →
+            </motion.span>
+            <span>scroll · drag to explore</span>
+            <span aria-hidden className="text-[#5a5347] text-[14px] leading-none">
+              ×
+            </span>
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function EmptyState({
   onClear,
 }: {
@@ -763,6 +819,7 @@ function App() {
         sortMode={sortMode}
         onSortChange={setSortMode}
       />
+      {!isEmpty && <OnboardingHint />}
       {!isEmpty && (
         <PreviewPanel
           book={selectedBook}
