@@ -26,7 +26,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 
 - [ ] **Mobile**: il carosello angolato non funziona bene su touch < 768px — variante swipe-card verticale.
 - [x] **Search/filter bar mobile**: oggi `SearchFilter` è `hidden md:flex`, su mobile non c'è modo di cercare.
-- [ ] **Vista alternativa "griglia"**: toggle tra carosello 3D e griglia 2D (utile per scansione veloce e mobile).
+- [x] **Vista alternativa "griglia"**: toggle tra carosello 3D e griglia 2D (utile per scansione veloce e mobile).
 - [x] **Onboarding hint** al primo caricamento ("scroll · drag · ← →" è in alto a destra ma poco visibile).
 - [ ] **Light/sepia mode** globale come alternativa al mood scuro attuale.
 - [ ] **Hover sui libri**: al momento il focus è solo sul libro centrato, aggiungere hover-tilt sui laterali.

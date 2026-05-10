@@ -4,6 +4,7 @@ import { useBooks } from "./hooks/useBooks";
 import { useLibraryStatus } from "./hooks/useLibraryStatus";
 import { usePersonalRatings } from "./hooks/usePersonalRatings";
 import { BookCarousel } from "./components/BookCarousel/BookCarousel";
+import { GridView } from "./components/GridView/GridView";
 import { PreviewPanel } from "./components/PreviewPanel/PreviewPanel";
 import { BookModal } from "./components/BookModal/BookModal";
 import { FlippingBookLoader } from "./components/FlippingBookLoader";
@@ -527,6 +528,35 @@ function OnboardingHint() {
   );
 }
 
+function ViewToggle({
+  mode,
+  onChange,
+}: {
+  mode: "carousel" | "grid";
+  onChange: (m: "carousel" | "grid") => void;
+}) {
+  return (
+    <div className="absolute top-5 right-5 md:top-7 md:right-auto md:left-7 z-30 flex items-center gap-1 rounded-full border border-[#3a332a] bg-black/40 backdrop-blur p-1">
+      {(["carousel", "grid"] as const).map((m) => (
+        <button
+          key={m}
+          type="button"
+          onClick={() => onChange(m)}
+          aria-pressed={mode === m}
+          aria-label={`Switch to ${m} view`}
+          className={`px-3 py-1.5 rounded-full text-[9px] uppercase tracking-[0.28em] transition-colors ${
+            mode === m
+              ? "bg-[#C9A96E] text-[#0A0A0F]"
+              : "text-[#9a9286] hover:text-[#cdc5b5]"
+          }`}
+        >
+          {m === "carousel" ? "Shelf" : "Grid"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function EmptyState({
   onClear,
 }: {
@@ -645,6 +675,21 @@ function App() {
     loadLastOpened()
   );
   const [sortMode, setSortMode] = useState<SortMode>("default");
+  const [viewMode, setViewMode] = useState<"carousel" | "grid">(() => {
+    try {
+      const saved = localStorage.getItem("bibliotheca:viewMode");
+      return saved === "grid" ? "grid" : "carousel";
+    } catch {
+      return "carousel";
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("bibliotheca:viewMode", viewMode);
+    } catch {
+      // ignore
+    }
+  }, [viewMode]);
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
   const [openBookId, setOpenBookId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -783,16 +828,26 @@ function App() {
           background: `radial-gradient(120% 80% at 30% 60%, ${tintColor}22 0%, transparent 55%)`,
         }}
       />
-      <BookCarousel
-        books={filteredBooks}
-        onFocus={(book) => setSelectedBookId(book?.id ?? null)}
-        onOpen={(book) => setOpenBookId(book.id)}
-      />
-      <TopBar
-        total={filteredBooks.length}
-        focusedIndex={focusedIndex}
-        focusedBook={selectedBook}
-      />
+      {viewMode === "carousel" ? (
+        <BookCarousel
+          books={filteredBooks}
+          onFocus={(book) => setSelectedBookId(book?.id ?? null)}
+          onOpen={(book) => setOpenBookId(book.id)}
+        />
+      ) : (
+        <GridView
+          books={filteredBooks}
+          onOpen={(book) => setOpenBookId(book.id)}
+        />
+      )}
+      {viewMode === "carousel" && (
+        <TopBar
+          total={filteredBooks.length}
+          focusedIndex={focusedIndex}
+          focusedBook={selectedBook}
+        />
+      )}
+      <ViewToggle mode={viewMode} onChange={setViewMode} />
       <SearchFilter
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -819,8 +874,8 @@ function App() {
         sortMode={sortMode}
         onSortChange={setSortMode}
       />
-      {!isEmpty && <OnboardingHint />}
-      {!isEmpty && (
+      {!isEmpty && viewMode === "carousel" && <OnboardingHint />}
+      {!isEmpty && viewMode === "carousel" && (
         <PreviewPanel
           book={selectedBook}
           status={selectedBook ? getStatus(selectedBook.id) : undefined}
