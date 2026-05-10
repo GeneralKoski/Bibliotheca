@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { readCachedText, writeCachedText } from "../../../utils/gutenbergCache";
 
 const WORDS_PER_PAGE = 280;
 const textCache = new Map<number, string>();
@@ -71,16 +72,26 @@ export function useGutenbergText(gutenbergId: number): GutenbergText {
     setError(null);
     setRaw(null);
 
-    const request =
-      pendingTextRequests.get(gutenbergId) ??
+    const fetchAndStore = () =>
       fetch(url)
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.text();
         })
+        .then((text) => {
+          writeCachedText(gutenbergId, text);
+          return text;
+        })
         .finally(() => {
           pendingTextRequests.delete(gutenbergId);
         });
+
+    const request =
+      pendingTextRequests.get(gutenbergId) ??
+      readCachedText(gutenbergId).then((cached) => {
+        if (cached) return cached;
+        return fetchAndStore();
+      });
 
     pendingTextRequests.set(gutenbergId, request);
 
