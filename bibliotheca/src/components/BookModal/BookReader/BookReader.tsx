@@ -27,6 +27,13 @@ import {
   saveNotes,
 } from "../../../utils/notes";
 import { loadProgress, saveProgress } from "../../../utils/readingProgress";
+import {
+  WPM_BOUNDS,
+  formatRemaining,
+  loadWpm,
+  remainingWords,
+  saveWpm,
+} from "../../../utils/readingTime";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { ChaptersPanel } from "./ChaptersPanel";
 import { extractChapters } from "./extractChapters";
@@ -501,6 +508,19 @@ export function BookReader({ book, onClose }: BookReaderProps) {
   const removeNote = useCallback((id: string) => {
     setNotes((list) => list.filter((n) => n.id !== id));
   }, []);
+  const [wpm, setWpm] = useState<number>(() => loadWpm());
+  const [editingWpm, setEditingWpm] = useState(false);
+  const [wpmDraft, setWpmDraft] = useState("");
+  useEffect(() => {
+    saveWpm(wpm);
+  }, [wpm]);
+
+  const remaining = useMemo(
+    () => remainingWords(displayPages, currentSpread * 2),
+    [displayPages, currentSpread]
+  );
+  const remainingLabel = formatRemaining(remaining / Math.max(1, wpm));
+
   const exportNotes = useCallback(() => {
     const md = notesToMarkdown(book.title, book.author, notes);
     const safe = book.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -859,6 +879,44 @@ export function BookReader({ book, onClose }: BookReaderProps) {
             </span>
           )}
           <span> / {displayPages.length}</span>
+          <span className="text-[#E8E0D0]/40">·</span>
+          {editingWpm ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const n = parseInt(wpmDraft, 10);
+                if (Number.isFinite(n)) {
+                  setWpm(Math.max(WPM_BOUNDS.min, Math.min(WPM_BOUNDS.max, n)));
+                }
+                setEditingWpm(false);
+              }}
+              className="inline-flex items-center gap-1"
+            >
+              <input
+                autoFocus
+                type="number"
+                min={WPM_BOUNDS.min}
+                max={WPM_BOUNDS.max}
+                value={wpmDraft}
+                onChange={(e) => setWpmDraft(e.target.value)}
+                onBlur={() => setEditingWpm(false)}
+                className="w-14 bg-transparent border-b border-[#C9A96E] text-center outline-none text-[#C9A96E] p-0 m-0"
+              />
+              <span className="text-[#9a9286]">wpm</span>
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setWpmDraft(String(wpm));
+                setEditingWpm(true);
+              }}
+              title={`${wpm} words per minute — click to change`}
+              className="text-[#9a9286] hover:text-white transition-colors"
+            >
+              {remainingLabel}
+            </button>
+          )}
         </motion.div>
       )}
 
