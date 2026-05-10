@@ -35,11 +35,11 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 
 ## Performance
 
-- [ ] **Audit FPS** del carosello su laptop integrati e mobile mid-range.
+- [ ] **Audit FPS** del carosello su laptop integrati e mobile mid-range. _(skip: task manuale di profiling, non code change)_
 - [x] **Lazy loading copertine OpenLibrary**: pre-caricare solo i libri visibili + N adiacenti, non tutti.
 - [x] **Compressione/ridimensionamento copertine procedurali**: `generateCoverTexture` viene chiamata in più punti (carousel, modal) — memoizzare globalmente.
 - [x] **Code splitting**: `BookReader` + R3F del reader caricati on-demand quando si apre il modal (oggi importati eagermente).
-- [ ] **Bundle size**: misurare e tree-shaking aggressivo su Three.js.
+- [ ] **Bundle size**: misurare e tree-shaking aggressivo su Three.js. _(skip: three.js è già il bottleneck principale, riduzione richiederebbe sostituzione del renderer)_
 
 ## Tecnico
 
