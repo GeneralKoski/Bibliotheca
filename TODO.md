@@ -50,7 +50,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 - [ ] **Analytics minimal** (Plausible/Umami) per capire cosa viene aperto davvero.
 - [ ] **A11y pass**: il carosello 3D non è navigabile da tastiera/screen reader — alternativa lista accessibile dietro skip-link.
 - [ ] **SEO**: meta tag, OG image dinamica con la copertina del libro corrente, sitemap.
-- [ ] **Deep-link** a libro specifico (`?book=slug` o `#book/slug`) per condivisione e refresh-safe.
+- [x] **Deep-link** a libro specifico (`?book=<id>`) per condivisione e refresh-safe.
 
 ## Contenuti / framing
 

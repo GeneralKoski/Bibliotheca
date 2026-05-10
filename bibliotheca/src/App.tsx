@@ -817,6 +817,32 @@ function App() {
     }
   }, [openBookId, hydrateBookById]);
 
+  useEffect(() => {
+    if (loading) return;
+    const url = new URL(window.location.href);
+    const param = url.searchParams.get("book");
+    if (param) {
+      const id = parseInt(param, 10);
+      if (Number.isFinite(id) && books.some((b) => b.id === id)) {
+        setOpenBookId(id);
+      }
+    }
+    // intentionally only on first books load
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    const url = new URL(window.location.href);
+    if (openBookId != null) {
+      url.searchParams.set("book", String(openBookId));
+    } else {
+      url.searchParams.delete("book");
+    }
+    const next = url.pathname + (url.search ? url.search : "") + url.hash;
+    window.history.replaceState(null, "", next);
+  }, [openBookId, loading]);
+
   if (loading) {
     return <LoadingScreen />;
   }
