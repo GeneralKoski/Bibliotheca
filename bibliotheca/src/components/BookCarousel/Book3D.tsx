@@ -100,9 +100,15 @@ export const Book3D = memo(
 
     useFrame(() => {
       if (!hoverRef.current) return;
-      const target = hovered.current ? Math.PI / 24 : 0;
+      const targetRot = hovered.current ? Math.PI / 18 : 0;
+      const targetY = hovered.current ? 0.08 : 0;
+      const targetZ = hovered.current ? 0.12 : 0;
       hoverRef.current.rotation.y +=
-        (target - hoverRef.current.rotation.y) * 0.12;
+        (targetRot - hoverRef.current.rotation.y) * 0.16;
+      hoverRef.current.position.y +=
+        (targetY - hoverRef.current.position.y) * 0.16;
+      hoverRef.current.position.z +=
+        (targetZ - hoverRef.current.position.z) * 0.16;
     });
 
     return (
