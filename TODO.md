@@ -30,7 +30,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 - [x] **Onboarding hint** al primo caricamento ("scroll · drag · ← →" è in alto a destra ma poco visibile).
 - [ ] **Light/sepia mode** globale come alternativa al mood scuro attuale. _(skip: richiede refactoring colori → CSS variables, design intenzionalmente dark)_
 - [x] **Hover sui libri**: al momento il focus è solo sul libro centrato, aggiungere hover-tilt sui laterali.
-- [ ] **Transizione modal più cinematica**: shared layout Framer Motion che fa "uscire" il libro dallo scaffale invece dello scale-in.
+- [x] **Transizione modal più cinematica**: shared layout Framer Motion che fa "uscire" il libro dallo scaffale invece dello scale-in.
 - [ ] **Suono opzionale** di pagina che si gira nel reader (toggle on/off).
 
 ## Performance

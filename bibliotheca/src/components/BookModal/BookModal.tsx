@@ -136,10 +136,16 @@ export function BookModal({
           <motion.div
             key="content"
             ref={contentRef}
-            initial={{ scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 26 }}
+            initial={{ y: 80, scale: 0.92, rotateX: -10, opacity: 0 }}
+            animate={{ y: 0, scale: 1, rotateX: 0, opacity: 1 }}
+            exit={{ y: 40, scale: 0.95, rotateX: -6, opacity: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 220,
+              damping: 26,
+              mass: 0.9,
+            }}
+            style={{ transformPerspective: 1400 }}
             className="relative w-[92%] max-w-5xl max-h-[88vh] overflow-y-auto rounded-2xl border border-white/10 bg-gradient-to-br from-[#15141c] to-[#0e0d14] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)]"
           >
             <button
@@ -153,9 +159,20 @@ export function BookModal({
 
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8 p-10">
               <div className="md:col-span-2 flex flex-col items-center gap-6">
-                <div
+                <motion.div
+                  initial={{ rotateY: -22, y: 30, opacity: 0 }}
+                  animate={{ rotateY: 0, y: 0, opacity: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 200,
+                    damping: 22,
+                    delay: 0.08,
+                  }}
+                  style={{
+                    transformPerspective: 1200,
+                    backgroundColor: book.color,
+                  }}
                   className="w-full max-w-[300px] aspect-[2/3] rounded-md overflow-hidden shadow-[0_30px_60px_-20px_rgba(0,0,0,0.9)]"
-                  style={{ backgroundColor: book.color }}
                 >
                   <img
                     src={coverSrc}
@@ -163,7 +180,7 @@ export function BookModal({
                     className="w-full h-full object-cover"
                     onError={() => setCoverSrc(proceduralDataUrl)}
                   />
-                </div>
+                </motion.div>
                 <div className="w-full space-y-2 text-xs text-[#cdc5b5]">
                   <Row label="Pages" value={String(book.pages)} />
                   <Row label="Year" value={String(book.year)} />
