@@ -818,6 +818,13 @@ function App() {
   }, [openBookId, hydrateBookById]);
 
   useEffect(() => {
+    const focused = openBook ?? selectedBook;
+    document.title = focused
+      ? `${focused.title} — Bibliotheca`
+      : "Bibliotheca";
+  }, [openBook, selectedBook]);
+
+  useEffect(() => {
     if (viewMode !== "carousel") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Enter") return;
