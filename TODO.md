@@ -44,10 +44,10 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 ## Tecnico
 
 - [x] **Error boundary** per crash WebGL (alcuni device disabilitano WebGL → app bianca).
-- [ ] **Test**: smoke test con Vitest su `useBooks`, filtri, `usePageFlip`.
+- [ ] **Test**: smoke test con Vitest su `useBooks`, filtri, `usePageFlip`. _(deferred: richiede setup vitest e scrittura test, da fare in batch)_
 - [x] **CI**: GitHub Action con lint + build + type-check su PR.
-- [ ] **Deploy**: pipeline Vercel/Netlify con preview deploy per branch.
-- [ ] **Analytics minimal** (Plausible/Umami) per capire cosa viene aperto davvero.
+- [ ] **Deploy**: pipeline Vercel/Netlify con preview deploy per branch. _(deferred: richiede scelta provider e account)_
+- [ ] **Analytics minimal** (Plausible/Umami) per capire cosa viene aperto davvero. _(deferred: richiede account su provider analytics)_
 - [x] **A11y pass**: il carosello 3D non è navigabile da tastiera/screen reader — alternativa lista accessibile dietro skip-link, Enter per aprire il libro centrato.
 - [x] **SEO**: meta tag base (description, og:image, twitter card) e document title dinamico per libro aperto. _OG image dinamica per libro richiede SSR/build pre-renderer e resta da fare._
 - [x] **Deep-link** a libro specifico (`?book=<id>`) per condivisione e refresh-safe.
