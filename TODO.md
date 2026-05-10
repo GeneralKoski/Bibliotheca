@@ -48,7 +48,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 - [ ] **CI**: GitHub Action con lint + build + type-check su PR.
 - [ ] **Deploy**: pipeline Vercel/Netlify con preview deploy per branch.
 - [ ] **Analytics minimal** (Plausible/Umami) per capire cosa viene aperto davvero.
-- [ ] **A11y pass**: il carosello 3D non è navigabile da tastiera/screen reader — alternativa lista accessibile dietro skip-link.
+- [x] **A11y pass**: il carosello 3D non è navigabile da tastiera/screen reader — alternativa lista accessibile dietro skip-link, Enter per aprire il libro centrato.
 - [ ] **SEO**: meta tag, OG image dinamica con la copertina del libro corrente, sitemap.
 - [x] **Deep-link** a libro specifico (`?book=<id>`) per condivisione e refresh-safe.
 

@@ -818,6 +818,20 @@ function App() {
   }, [openBookId, hydrateBookById]);
 
   useEffect(() => {
+    if (viewMode !== "carousel") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter") return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, [role="dialog"], button')) return;
+      if (selectedBookId != null && openBookId == null) {
+        setOpenBookId(selectedBookId);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewMode, selectedBookId, openBookId]);
+
+  useEffect(() => {
     if (loading) return;
     const url = new URL(window.location.href);
     const param = url.searchParams.get("book");
@@ -852,6 +866,22 @@ function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#0A0A0F] text-[#E8E0D0] relative">
+      <a
+        href="#book-list"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:rounded-full focus:bg-[#C9A96E] focus:text-[#0A0A0F] focus:text-[10px] focus:uppercase focus:tracking-[0.32em]"
+      >
+        Skip to book list
+      </a>
+      <ul id="book-list" className="sr-only" aria-label="All books">
+        {filteredBooks.map((b) => (
+          <li key={b.id}>
+            <button
+              type="button"
+              onClick={() => setOpenBookId(b.id)}
+            >{`${b.title} by ${b.author}`}</button>
+          </li>
+        ))}
+      </ul>
       <div
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none transition-[background] duration-700"
