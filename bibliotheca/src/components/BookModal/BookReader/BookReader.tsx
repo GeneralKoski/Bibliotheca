@@ -18,11 +18,20 @@ import {
   makeBookmarkId,
   saveBookmarks,
 } from "../../../utils/bookmarks";
+import {
+  type BookNote,
+  downloadMarkdown,
+  loadNotes,
+  makeNoteId,
+  notesToMarkdown,
+  saveNotes,
+} from "../../../utils/notes";
 import { loadProgress, saveProgress } from "../../../utils/readingProgress";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { ChaptersPanel } from "./ChaptersPanel";
 import { extractChapters } from "./extractChapters";
 import { IntroScene } from "./IntroScene";
+import { NotesPanel } from "./NotesPanel";
 import { SearchPanel } from "./SearchPanel";
 import { buildPageCanvas } from "./buildPageCanvas";
 import { PageMesh } from "./PageMesh";
@@ -465,6 +474,39 @@ export function BookReader({ book, onClose }: BookReaderProps) {
 
   const chapters = useMemo(() => extractChapters(displayPages), [displayPages]);
 
+  const [notes, setNotes] = useState<BookNote[]>(() =>
+    loadNotes(book.gutenbergId)
+  );
+  const [notesOpen, setNotesOpen] = useState(false);
+
+  useEffect(() => {
+    saveNotes(book.gutenbergId, notes);
+  }, [book.gutenbergId, notes]);
+
+  const addNote = useCallback(
+    (text: string, quote?: string) => {
+      setNotes((list) => [
+        ...list,
+        {
+          id: makeNoteId(),
+          pageIndex: currentSpread * 2,
+          text,
+          quote,
+          createdAt: Date.now(),
+        },
+      ]);
+    },
+    [currentSpread]
+  );
+  const removeNote = useCallback((id: string) => {
+    setNotes((list) => list.filter((n) => n.id !== id));
+  }, []);
+  const exportNotes = useCallback(() => {
+    const md = notesToMarkdown(book.title, book.author, notes);
+    const safe = book.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    downloadMarkdown(`${safe || "book"}-notes.md`, md);
+  }, [book, notes]);
+
   useEffect(() => {
     saveBookmarks(book.gutenbergId, bookmarks);
   }, [book.gutenbergId, bookmarks]);
@@ -678,13 +720,29 @@ export function BookReader({ book, onClose }: BookReaderProps) {
           )}
           <button
             type="button"
-            onClick={() => setBookmarksOpen((o) => !o)}
+            onClick={() => {
+              setBookmarksOpen((o) => !o);
+              setNotesOpen(false);
+            }}
             aria-label="Toggle bookmarks"
             aria-pressed={bookmarksOpen}
             className="absolute top-6 right-20 z-20 h-11 px-4 rounded-full border border-white/10 bg-black/50 text-[#E8E0D0] hover:bg-white/10 transition-colors flex items-center gap-2 text-[10px] uppercase tracking-[0.28em]"
           >
             <span aria-hidden>♥</span>
             <span>{bookmarks.length}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setNotesOpen((o) => !o);
+              setBookmarksOpen(false);
+            }}
+            aria-label="Toggle notes"
+            aria-pressed={notesOpen}
+            className="absolute top-6 right-[150px] z-20 h-11 px-4 rounded-full border border-white/10 bg-black/50 text-[#E8E0D0] hover:bg-white/10 transition-colors flex items-center gap-2 text-[10px] uppercase tracking-[0.28em]"
+          >
+            <span aria-hidden>✎</span>
+            <span>{notes.length}</span>
           </button>
         </>
       )}
@@ -837,6 +895,21 @@ export function BookReader({ book, onClose }: BookReaderProps) {
           goTo(spread);
           setChaptersOpen(false);
         }}
+      />
+
+      <NotesPanel
+        open={notesOpen && introDone}
+        notes={notes}
+        currentSpread={currentSpread}
+        totalPages={displayPages.length}
+        onClose={() => setNotesOpen(false)}
+        onJump={(spread) => {
+          goTo(spread);
+          setNotesOpen(false);
+        }}
+        onAdd={addNote}
+        onRemove={removeNote}
+        onExport={exportNotes}
       />
     </motion.div>
   );
