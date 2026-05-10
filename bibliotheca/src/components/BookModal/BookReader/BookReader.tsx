@@ -20,6 +20,8 @@ import {
 } from "../../../utils/bookmarks";
 import { loadProgress, saveProgress } from "../../../utils/readingProgress";
 import { BookmarksPanel } from "./BookmarksPanel";
+import { ChaptersPanel } from "./ChaptersPanel";
+import { extractChapters } from "./extractChapters";
 import { IntroScene } from "./IntroScene";
 import { SearchPanel } from "./SearchPanel";
 import { buildPageCanvas } from "./buildPageCanvas";
@@ -459,6 +461,9 @@ export function BookReader({ book, onClose }: BookReaderProps) {
   );
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [chaptersOpen, setChaptersOpen] = useState(false);
+
+  const chapters = useMemo(() => extractChapters(displayPages), [displayPages]);
 
   useEffect(() => {
     saveBookmarks(book.gutenbergId, bookmarks);
@@ -659,6 +664,18 @@ export function BookReader({ book, onClose }: BookReaderProps) {
           >
             <span aria-hidden>⌕</span>
           </button>
+          {chapters.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setChaptersOpen((o) => !o)}
+              aria-label="Toggle contents"
+              aria-pressed={chaptersOpen}
+              className="absolute top-6 left-20 z-20 h-11 px-4 rounded-full border border-white/10 bg-black/50 text-[#E8E0D0] hover:bg-white/10 transition-colors flex items-center gap-2 text-[10px] uppercase tracking-[0.28em]"
+            >
+              <span aria-hidden>☰</span>
+              <span>Contents</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setBookmarksOpen((o) => !o)}
@@ -807,6 +824,18 @@ export function BookReader({ book, onClose }: BookReaderProps) {
         onJump={(spread) => {
           goTo(spread);
           setSearchOpen(false);
+        }}
+      />
+
+      <ChaptersPanel
+        open={chaptersOpen && introDone}
+        chapters={chapters}
+        currentSpread={currentSpread}
+        totalPages={displayPages.length}
+        onClose={() => setChaptersOpen(false)}
+        onJump={(spread) => {
+          goTo(spread);
+          setChaptersOpen(false);
         }}
       />
     </motion.div>
