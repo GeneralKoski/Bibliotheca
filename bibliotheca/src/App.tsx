@@ -678,10 +678,14 @@ function App() {
   const [viewMode, setViewMode] = useState<"carousel" | "grid">(() => {
     try {
       const saved = localStorage.getItem("bibliotheca:viewMode");
-      return saved === "grid" ? "grid" : "carousel";
+      if (saved === "grid" || saved === "carousel") return saved;
     } catch {
-      return "carousel";
+      // ignore
     }
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      return "grid";
+    }
+    return "carousel";
   });
   useEffect(() => {
     try {

@@ -24,7 +24,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 
 ## UX / Design
 
-- [ ] **Mobile**: il carosello angolato non funziona bene su touch < 768px — variante swipe-card verticale.
+- [x] **Mobile**: il carosello angolato non funziona bene su touch < 768px — risolto facendo default alla griglia 2D su viewport < 768px.
 - [x] **Search/filter bar mobile**: oggi `SearchFilter` è `hidden md:flex`, su mobile non c'è modo di cercare.
 - [x] **Vista alternativa "griglia"**: toggle tra carosello 3D e griglia 2D (utile per scansione veloce e mobile).
 - [x] **Onboarding hint** al primo caricamento ("scroll · drag · ← →" è in alto a destra ma poco visibile).
