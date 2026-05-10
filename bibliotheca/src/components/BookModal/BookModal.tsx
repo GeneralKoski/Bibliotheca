@@ -6,10 +6,50 @@ import { BookReader } from "./BookReader/BookReader";
 
 interface BookModalProps {
   book: Book;
+  personalRating?: number;
+  onPersonalRatingChange?: (rating: number | null) => void;
   onClose: () => void;
 }
 
-export function BookModal({ book, onClose }: BookModalProps) {
+function PersonalStars({
+  value,
+  color,
+  onChange,
+}: {
+  value: number;
+  color: string;
+  onChange: (rating: number | null) => void;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+  const display = hover ?? value;
+  return (
+    <div className="flex items-center gap-1" onMouseLeave={() => setHover(null)}>
+      {[1, 2, 3, 4, 5].map((i) => {
+        const filled = display >= i;
+        return (
+          <button
+            key={i}
+            type="button"
+            aria-label={`Rate ${i} out of 5`}
+            onMouseEnter={() => setHover(i)}
+            onClick={() => onChange(value === i ? null : i)}
+            className="text-[18px] leading-none transition-colors"
+            style={{ color: filled ? color : "#3a332a" }}
+          >
+            ★
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function BookModal({
+  book,
+  personalRating,
+  onPersonalRatingChange,
+  onClose,
+}: BookModalProps) {
   const [isReading, setIsReading] = useState(false);
 
   const proceduralDataUrl = useMemo(() => {
@@ -131,6 +171,18 @@ export function BookModal({ book, onClose }: BookModalProps) {
                   <Row label="License" value="Public Domain" />
                   <Row label="Rating" value={`${book.rating.toFixed(1)} / 5`} />
                 </div>
+                {onPersonalRatingChange && (
+                  <div className="w-full flex items-center justify-between border-t border-white/5 pt-3">
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-[#8a8272]">
+                      My rating
+                    </span>
+                    <PersonalStars
+                      value={personalRating ?? 0}
+                      color={book.color}
+                      onChange={onPersonalRatingChange}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="md:col-span-3 flex flex-col gap-5">

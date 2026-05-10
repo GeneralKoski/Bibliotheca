@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useBooks } from "./hooks/useBooks";
 import { useLibraryStatus } from "./hooks/useLibraryStatus";
+import { usePersonalRatings } from "./hooks/usePersonalRatings";
 import { BookCarousel } from "./components/BookCarousel/BookCarousel";
 import { PreviewPanel } from "./components/PreviewPanel/PreviewPanel";
 import { BookModal } from "./components/BookModal/BookModal";
@@ -314,6 +315,7 @@ function LoadingScreen() {
 function App() {
   const { books, loading, hydrateBookById } = useBooks();
   const { statusMap, getStatus, setStatus } = useLibraryStatus();
+  const { getRating, setRating } = usePersonalRatings();
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
   const [openBookId, setOpenBookId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -454,7 +456,12 @@ function App() {
         />
       )}
       {openBook && (
-        <BookModal book={openBook} onClose={() => setOpenBookId(null)} />
+        <BookModal
+          book={openBook}
+          personalRating={getRating(openBook.id)}
+          onPersonalRatingChange={(r) => setRating(openBook.id, r)}
+          onClose={() => setOpenBookId(null)}
+        />
       )}
     </div>
   );
