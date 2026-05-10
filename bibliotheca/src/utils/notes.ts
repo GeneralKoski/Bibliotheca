@@ -72,8 +72,10 @@ export function notesToMarkdown(
       lines.push(quoted);
       lines.push("");
     }
-    lines.push(n.text);
-    lines.push("");
+    if (n.text) {
+      lines.push(n.text);
+      lines.push("");
+    }
     lines.push(`*${new Date(n.createdAt).toLocaleString()}*`);
     lines.push("");
     lines.push("---");

@@ -20,6 +20,8 @@ function pageRange(spread: number, totalPages: number): string {
   return right > left ? `${left}–${right}` : String(left);
 }
 
+type FilterMode = "all" | "quotes";
+
 export function NotesPanel({
   open,
   notes,
@@ -33,8 +35,13 @@ export function NotesPanel({
 }: NotesPanelProps) {
   const [text, setText] = useState("");
   const [quote, setQuote] = useState("");
+  const [filter, setFilter] = useState<FilterMode>("all");
 
-  const sorted = [...notes].sort((a, b) => a.pageIndex - b.pageIndex);
+  const visible = notes
+    .filter((n) => (filter === "quotes" ? !!n.quote : true))
+    .sort((a, b) => a.pageIndex - b.pageIndex);
+  const sorted = visible;
+  const canSubmit = text.trim().length > 0 || quote.trim().length > 0;
 
   return (
     <AnimatePresence>
@@ -49,7 +56,7 @@ export function NotesPanel({
         >
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
             <span className="text-[10px] uppercase tracking-[0.32em] text-[#cdc5b5]">
-              Notes
+              Notes & Quotes
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -71,10 +78,28 @@ export function NotesPanel({
             </div>
           </div>
 
+          <div className="flex border-b border-white/5">
+            {(["all", "quotes"] as FilterMode[]).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                aria-pressed={filter === f}
+                className={`flex-1 py-2.5 text-[9px] uppercase tracking-[0.32em] transition-colors ${
+                  filter === f
+                    ? "text-[#C9A96E] border-b border-[#C9A96E]"
+                    : "text-[#9a9286] hover:text-[#cdc5b5]"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (!text.trim()) return;
+              if (!canSubmit) return;
               onAdd(text.trim(), quote.trim() || undefined);
               setText("");
               setQuote("");
@@ -87,30 +112,30 @@ export function NotesPanel({
             <textarea
               value={quote}
               onChange={(e) => setQuote(e.target.value)}
-              placeholder="optional quote"
+              placeholder="quote"
               rows={2}
               className="bg-transparent text-[#cdc5b5] italic text-[12px] py-2 px-1 outline-none border-b border-[#3a332a] focus:border-[#9a9286] transition-colors placeholder:text-[#5a5347] resize-none"
             />
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="your note"
+              placeholder="note"
               rows={3}
               className="bg-transparent text-[#E8E0D0] text-[12px] py-2 px-1 outline-none border-b border-[#3a332a] focus:border-[#C9A96E] transition-colors placeholder:text-[#5a5347] resize-none"
             />
             <button
               type="submit"
-              disabled={!text.trim()}
+              disabled={!canSubmit}
               className="self-start px-4 py-1.5 rounded-full bg-[#C9A96E] text-[#0A0A0F] text-[9px] uppercase tracking-[0.28em] font-medium hover:shadow-[0_0_20px_rgba(201,169,110,0.5)] disabled:opacity-40 disabled:hover:shadow-none transition-all"
             >
-              + Note
+              + Save
             </button>
           </form>
 
           <div className="flex-1 overflow-y-auto">
             {sorted.length === 0 ? (
               <div className="px-5 py-8 text-center text-[10px] uppercase tracking-[0.28em] text-[#5a5347]">
-                no notes yet
+                {filter === "quotes" ? "no quotes yet" : "nothing saved yet"}
               </div>
             ) : (
               <ul className="divide-y divide-white/5">
@@ -138,9 +163,11 @@ export function NotesPanel({
                         {n.quote}
                       </blockquote>
                     )}
-                    <p className="text-[12px] text-[#E8E0D0] leading-relaxed whitespace-pre-line">
-                      {n.text}
-                    </p>
+                    {n.text && (
+                      <p className="text-[12px] text-[#E8E0D0] leading-relaxed whitespace-pre-line">
+                        {n.text}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
