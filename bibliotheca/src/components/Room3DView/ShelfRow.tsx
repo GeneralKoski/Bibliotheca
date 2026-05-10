@@ -66,7 +66,7 @@ export function ShelfRow({
             0,
             BOOK_DEPTH / 2 - depth / 2 + 0.02,
           ]}
-          slotWidth={Math.min(slotWidth * 0.78, 0.2)}
+          slotWidth={slotWidth * 0.94}
           onSelect={onSelect}
           onHover={onHover}
         />
@@ -130,8 +130,6 @@ function ShelvedBook({
       0.18;
   });
 
-  // Suppress every 23rd book to leave a small gap (organic feel)
-  if ((book.id * 7 + index) % 23 === 0 && index > 0) return null;
 
   return (
     <group

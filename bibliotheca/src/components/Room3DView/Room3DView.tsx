@@ -22,7 +22,7 @@ const ROOM_SIZE = 12;
 const ROOM_HEIGHT = 5;
 const SHELF_DEPTH = 0.4;
 const SHELF_HEIGHTS = [1.0, 2.05, 3.1, 4.05];
-const BOOKS_PER_SHELF = 12;
+const BOOKS_PER_SHELF = 22;
 
 export function Room3DView({ books, onOpen }: Room3DViewProps) {
   const [hovered, setHovered] = useState<Book | null>(null);
@@ -42,12 +42,12 @@ export function Room3DView({ books, onOpen }: Room3DViewProps) {
       <Canvas
         dpr={[1, 2]}
         shadows
-        camera={{ position: [0, 2.0, 7.5], fov: 55 }}
+        camera={{ position: [0, 2.2, 5.5], fov: 60 }}
         gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
         style={{ position: "absolute", inset: 0 }}
       >
         <color attach="background" args={["#0d0805"]} />
-        <fog attach="fog" args={["#1a0d05", 6, 18]} />
+        <fog attach="fog" args={["#1a0d05", 12, 28]} />
 
         <ambientLight intensity={0.18} color="#3a2a18" />
         <hemisphereLight
@@ -75,6 +75,28 @@ export function Room3DView({ books, onOpen }: Room3DViewProps) {
           color="#d97a3a"
           distance={6}
           decay={2}
+        />
+        {/* Wash on the back wall so shelves read clearly */}
+        <pointLight
+          position={[0, ROOM_HEIGHT - 0.4, -ROOM_SIZE / 2 + 1.8]}
+          intensity={1.6}
+          color="#f3c98a"
+          distance={9}
+          decay={1.6}
+        />
+        <pointLight
+          position={[-ROOM_SIZE / 2 + 1.5, ROOM_HEIGHT - 0.6, -1.5]}
+          intensity={0.8}
+          color="#f3a85c"
+          distance={6}
+          decay={1.8}
+        />
+        <pointLight
+          position={[ROOM_SIZE / 2 - 1.5, ROOM_HEIGHT - 0.6, -1.5]}
+          intensity={0.8}
+          color="#f3a85c"
+          distance={6}
+          decay={1.8}
         />
 
         <Room size={ROOM_SIZE} height={ROOM_HEIGHT} />
@@ -142,8 +164,8 @@ export function Room3DView({ books, onOpen }: Room3DViewProps) {
         <OrbitControls
           enablePan={false}
           enableZoom
-          minDistance={3}
-          maxDistance={11}
+          minDistance={2.5}
+          maxDistance={9}
           minPolarAngle={Math.PI / 3.5}
           maxPolarAngle={Math.PI / 2.05}
           target={[0, 2.0, 0]}
