@@ -26,6 +26,11 @@ import {
   notesToMarkdown,
   saveNotes,
 } from "../../../utils/notes";
+import {
+  isPageSoundEnabled,
+  playPageFlip,
+  setPageSoundEnabled,
+} from "../../../utils/pageSound";
 import { loadProgress, saveProgress } from "../../../utils/readingProgress";
 import {
   WPM_BOUNDS,
@@ -496,6 +501,23 @@ export function BookReader({ book, onClose }: BookReaderProps) {
     saveReaderPrefs(readerPrefs);
   }, [readerPrefs]);
   const readerStyle = useMemo(() => resolveStyle(readerPrefs), [readerPrefs]);
+
+  const [soundOn, setSoundOn] = useState(() => isPageSoundEnabled());
+  const soundOnRef = useRef(soundOn);
+  useEffect(() => {
+    soundOnRef.current = soundOn;
+    setPageSoundEnabled(soundOn);
+  }, [soundOn]);
+
+  const lastSpreadForSoundRef = useRef(currentSpread);
+  useEffect(() => {
+    if (currentSpread !== lastSpreadForSoundRef.current) {
+      lastSpreadForSoundRef.current = currentSpread;
+      if (soundOnRef.current && progressRestoredRef.current) {
+        playPageFlip();
+      }
+    }
+  }, [currentSpread]);
 
   const chapters = useMemo(() => extractChapters(displayPages), [displayPages]);
 
@@ -990,12 +1012,14 @@ export function BookReader({ book, onClose }: BookReaderProps) {
         themeId={readerPrefs.themeId}
         fontId={readerPrefs.fontId}
         sizeId={readerPrefs.sizeId}
+        soundEnabled={soundOn}
         onClose={() => setSettingsOpen(false)}
         onThemeChange={(themeId) =>
           setReaderPrefs((p) => ({ ...p, themeId }))
         }
         onFontChange={(fontId) => setReaderPrefs((p) => ({ ...p, fontId }))}
         onSizeChange={(sizeId) => setReaderPrefs((p) => ({ ...p, sizeId }))}
+        onSoundChange={setSoundOn}
       />
 
       <NotesPanel

@@ -13,10 +13,12 @@ interface ReaderSettingsProps {
   themeId: ThemeId;
   fontId: FontId;
   sizeId: SizeId;
+  soundEnabled: boolean;
   onClose: () => void;
   onThemeChange: (id: ThemeId) => void;
   onFontChange: (id: FontId) => void;
   onSizeChange: (id: SizeId) => void;
+  onSoundChange: (enabled: boolean) => void;
 }
 
 export function ReaderSettings({
@@ -24,10 +26,12 @@ export function ReaderSettings({
   themeId,
   fontId,
   sizeId,
+  soundEnabled,
   onClose,
   onThemeChange,
   onFontChange,
   onSizeChange,
+  onSoundChange,
 }: ReaderSettingsProps) {
   return (
     <AnimatePresence>
@@ -125,6 +129,28 @@ export function ReaderSettings({
                 ))}
               </div>
             </Group>
+
+            <button
+              type="button"
+              onClick={() => onSoundChange(!soundEnabled)}
+              aria-pressed={soundEnabled}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-md border border-white/10 hover:bg-white/[0.03] transition-colors"
+            >
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[#cdc5b5]">
+                Page-flip sound
+              </span>
+              <span
+                className={`relative w-9 h-5 rounded-full transition-colors ${
+                  soundEnabled ? "bg-[#C9A96E]" : "bg-white/10"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                    soundEnabled ? "translate-x-4" : "translate-x-0.5"
+                  }`}
+                />
+              </span>
+            </button>
           </div>
         </motion.div>
       )}
