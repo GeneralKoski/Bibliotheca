@@ -17,7 +17,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 
 ## Libreria personale
 
-- [ ] **Stato libro**: *letto / in lettura / wishlist* con badge sul carosello e filtro dedicato (persistenza localStorage).
+- [x] **Stato libro**: *letto / in lettura / wishlist* con badge sul carosello e filtro dedicato (persistenza localStorage).
 - [ ] **Rating personale** distinto da quello dei dati statici.
 - [ ] **Citazioni preferite** salvate dalla vista reader con back-link alla pagina.
 - [ ] **Sort esplicito**: anno, autore, rating, ultimo aperto (oggi solo filtro categoria + search).

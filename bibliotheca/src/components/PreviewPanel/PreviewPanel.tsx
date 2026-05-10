@@ -1,9 +1,12 @@
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import type { Book } from "../../types";
+import { type BookStatus, STATUS_LABELS, STATUS_ORDER } from "../../utils/library";
 
 interface PreviewPanelProps {
   book: Book | null;
+  status?: BookStatus;
   onOpen: (book: Book) => void;
+  onStatusChange?: (status: BookStatus | null) => void;
 }
 
 const containerVariants: Variants = {
@@ -55,7 +58,12 @@ function Stars({ rating, color }: { rating: number; color: string }) {
   return <div className="flex items-center">{stars}</div>;
 }
 
-export function PreviewPanel({ book, onOpen }: PreviewPanelProps) {
+export function PreviewPanel({
+  book,
+  status,
+  onOpen,
+  onStatusChange,
+}: PreviewPanelProps) {
   return (
     <div
       className="absolute inset-x-0 bottom-0 px-6 pb-7 max-h-[58%] md:inset-auto md:top-32 md:left-10 md:bottom-auto md:max-h-[calc(58vh-8rem)] md:overflow-hidden md:w-[440px] md:px-0 md:pb-0 pointer-events-none"
@@ -151,6 +159,40 @@ export function PreviewPanel({ book, onOpen }: PreviewPanelProps) {
                 {book.tags.slice(0, 2).join(" / ")}
               </span>
             </motion.div>
+
+            {onStatusChange && (
+              <motion.div
+                variants={itemVariants}
+                className="flex flex-wrap items-center gap-2"
+              >
+                {STATUS_ORDER.map((s) => {
+                  const active = status === s;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => onStatusChange(active ? null : s)}
+                      aria-pressed={active}
+                      className="px-3 py-1.5 rounded-full text-[9px] uppercase tracking-[0.28em] border transition-colors"
+                      style={
+                        active
+                          ? {
+                              borderColor: book.color,
+                              color: "#0A0A0F",
+                              backgroundColor: book.color,
+                            }
+                          : {
+                              borderColor: "#3a332a",
+                              color: "#9a9286",
+                            }
+                      }
+                    >
+                      {STATUS_LABELS[s]}
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
 
             <motion.button
               variants={itemVariants}

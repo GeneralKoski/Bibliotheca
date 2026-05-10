@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useBooks } from "./hooks/useBooks";
+import { useLibraryStatus } from "./hooks/useLibraryStatus";
 import { BookCarousel } from "./components/BookCarousel/BookCarousel";
 import { PreviewPanel } from "./components/PreviewPanel/PreviewPanel";
 import { BookModal } from "./components/BookModal/BookModal";
 import { FlippingBookLoader } from "./components/FlippingBookLoader";
 import type { Book } from "./types";
+import { type BookStatus, STATUS_LABELS, STATUS_ORDER } from "./utils/library";
 
 interface CategoryEntry {
   name: string;
@@ -106,6 +108,44 @@ function CategorySelect({
   );
 }
 
+function StatusFilter({
+  active,
+  counts,
+  onChange,
+}: {
+  active: BookStatus | null;
+  counts: Record<BookStatus, number>;
+  onChange: (v: BookStatus | null) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 pointer-events-auto">
+      {STATUS_ORDER.map((s) => {
+        const isActive = active === s;
+        const count = counts[s] ?? 0;
+        return (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onChange(isActive ? null : s)}
+            aria-pressed={isActive}
+            disabled={count === 0 && !isActive}
+            className={`px-3 py-1.5 rounded-full text-[9px] uppercase tracking-[0.28em] border transition-colors ${
+              isActive
+                ? "border-[#C9A96E] text-[#0A0A0F] bg-[#C9A96E]"
+                : count === 0
+                ? "border-[#3a332a]/50 text-[#5a5347]/50 cursor-not-allowed"
+                : "border-[#3a332a] text-[#9a9286] hover:text-[#cdc5b5] hover:border-[#9a9286]"
+            }`}
+          >
+            <span>{STATUS_LABELS[s]}</span>
+            <span className="ml-2 tabular-nums opacity-70">{count}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function SearchFilter({
   searchQuery,
   onSearchChange,
@@ -113,6 +153,9 @@ function SearchFilter({
   activeCategory,
   onCategoryChange,
   totalCount,
+  statusFilter,
+  statusCounts,
+  onStatusChange,
 }: {
   searchQuery: string;
   onSearchChange: (s: string) => void;
@@ -120,6 +163,9 @@ function SearchFilter({
   activeCategory: string | null;
   onCategoryChange: (v: string | null) => void;
   totalCount: number;
+  statusFilter: BookStatus | null;
+  statusCounts: Record<BookStatus, number>;
+  onStatusChange: (v: BookStatus | null) => void;
 }) {
   return (
     <div className="hidden md:flex absolute top-20 left-1/2 -translate-x-1/2 z-20 items-center gap-6 pointer-events-none">
@@ -144,6 +190,12 @@ function SearchFilter({
         value={activeCategory}
         onChange={onCategoryChange}
         totalCount={totalCount}
+      />
+      <span aria-hidden className="h-3 w-px bg-[#3a332a]" />
+      <StatusFilter
+        active={statusFilter}
+        counts={statusCounts}
+        onChange={onStatusChange}
       />
     </div>
   );
@@ -261,10 +313,25 @@ function LoadingScreen() {
 
 function App() {
   const { books, loading, hydrateBookById } = useBooks();
+  const { statusMap, getStatus, setStatus } = useLibraryStatus();
   const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
   const [openBookId, setOpenBookId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<BookStatus | null>(null);
+
+  const statusCounts = useMemo<Record<BookStatus, number>>(() => {
+    const counts: Record<BookStatus, number> = {
+      read: 0,
+      reading: 0,
+      wishlist: 0,
+    };
+    for (const id of Object.keys(statusMap)) {
+      const s = statusMap[Number(id)];
+      if (s) counts[s] += 1;
+    }
+    return counts;
+  }, [statusMap]);
 
   const categories = useMemo<CategoryEntry[]>(() => {
     const counts = new Map<string, number>();
@@ -281,6 +348,9 @@ function App() {
     if (activeCategory) {
       result = result.filter((b) => b.category === activeCategory);
     }
+    if (statusFilter) {
+      result = result.filter((b) => statusMap[b.id] === statusFilter);
+    }
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       result = result.filter(
@@ -292,7 +362,7 @@ function App() {
       );
     }
     return result;
-  }, [books, activeCategory, searchQuery]);
+  }, [books, activeCategory, statusFilter, statusMap, searchQuery]);
 
   const selectedBook = useMemo(
     () => filteredBooks.find((book) => book.id === selectedBookId) ?? null,
@@ -360,11 +430,18 @@ function App() {
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
         totalCount={books.length}
+        statusFilter={statusFilter}
+        statusCounts={statusCounts}
+        onStatusChange={setStatusFilter}
       />
       {!isEmpty && (
         <PreviewPanel
           book={selectedBook}
+          status={selectedBook ? getStatus(selectedBook.id) : undefined}
           onOpen={(book) => setOpenBookId(book.id)}
+          onStatusChange={(s) => {
+            if (selectedBook) setStatus(selectedBook.id, s);
+          }}
         />
       )}
       {isEmpty && (
@@ -372,6 +449,7 @@ function App() {
           onClear={() => {
             setSearchQuery("");
             setActiveCategory(null);
+            setStatusFilter(null);
           }}
         />
       )}
