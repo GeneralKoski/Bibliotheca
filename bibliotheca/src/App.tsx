@@ -235,19 +235,7 @@ function StatusFilter({
   );
 }
 
-function SearchFilter({
-  searchQuery,
-  onSearchChange,
-  categories,
-  activeCategory,
-  onCategoryChange,
-  totalCount,
-  statusFilter,
-  statusCounts,
-  onStatusChange,
-  sortMode,
-  onSortChange,
-}: {
+interface SearchFilterProps {
   searchQuery: string;
   onSearchChange: (s: string) => void;
   categories: CategoryEntry[];
@@ -259,14 +247,16 @@ function SearchFilter({
   onStatusChange: (v: BookStatus | null) => void;
   sortMode: SortMode;
   onSortChange: (v: SortMode) => void;
-}) {
+}
+
+function SearchFilter(props: SearchFilterProps) {
   return (
     <div className="hidden md:flex absolute top-20 left-1/2 -translate-x-1/2 z-20 items-center gap-6 pointer-events-none">
       <div className="relative pointer-events-auto">
         <input
           type="search"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          value={props.searchQuery}
+          onChange={(e) => props.onSearchChange(e.target.value)}
           placeholder="search the collection"
           className="bg-transparent text-[#cdc5b5] text-[10px] uppercase tracking-[0.32em] w-[280px] py-2 pl-1 pr-7 outline-none border-b border-[#3a332a] focus:border-[#9a9286] transition-colors placeholder:text-[#5a5347]"
         />
@@ -279,20 +269,205 @@ function SearchFilter({
       </div>
       <span aria-hidden className="h-3 w-px bg-[#3a332a]" />
       <CategorySelect
-        categories={categories}
-        value={activeCategory}
-        onChange={onCategoryChange}
-        totalCount={totalCount}
+        categories={props.categories}
+        value={props.activeCategory}
+        onChange={props.onCategoryChange}
+        totalCount={props.totalCount}
       />
       <span aria-hidden className="h-3 w-px bg-[#3a332a]" />
       <StatusFilter
-        active={statusFilter}
-        counts={statusCounts}
-        onChange={onStatusChange}
+        active={props.statusFilter}
+        counts={props.statusCounts}
+        onChange={props.onStatusChange}
       />
       <span aria-hidden className="h-3 w-px bg-[#3a332a]" />
-      <SortSelect value={sortMode} onChange={onSortChange} />
+      <SortSelect value={props.sortMode} onChange={props.onSortChange} />
     </div>
+  );
+}
+
+function MobileFilters(props: SearchFilterProps) {
+  const [open, setOpen] = useState(false);
+  const activeCount =
+    (props.searchQuery.trim() ? 1 : 0) +
+    (props.activeCategory ? 1 : 0) +
+    (props.statusFilter ? 1 : 0) +
+    (props.sortMode !== "default" ? 1 : 0);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Open filters"
+        className="md:hidden absolute top-5 left-5 z-20 h-10 px-4 rounded-full border border-[#3a332a] bg-black/40 backdrop-blur text-[#cdc5b5] flex items-center gap-2 text-[10px] uppercase tracking-[0.28em]"
+      >
+        <span aria-hidden>⌕</span>
+        <span>Filters</span>
+        {activeCount > 0 && (
+          <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#C9A96E] text-[#0A0A0F] text-[9px] tabular-nums">
+            {activeCount}
+          </span>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setOpen(false);
+            }}
+          >
+            <motion.div
+              key="sheet"
+              initial={{ y: "-100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 32 }}
+              className="absolute top-0 inset-x-0 bg-[#0A0A0F]/98 backdrop-blur-xl border-b border-[#3a332a] p-6 pt-7 flex flex-col gap-5 max-h-[85vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-display text-[20px] tracking-wide text-[#E8E0D0]">
+                  Filters
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close filters"
+                  className="w-9 h-9 rounded-full border border-white/10 text-[#cdc5b5] hover:bg-white/5 transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              <label className="flex flex-col gap-2">
+                <span className="text-[9px] uppercase tracking-[0.32em] text-[#5a5347]">
+                  Search
+                </span>
+                <input
+                  type="search"
+                  autoFocus
+                  value={props.searchQuery}
+                  onChange={(e) => props.onSearchChange(e.target.value)}
+                  placeholder="title, author, tag…"
+                  className="bg-transparent text-[#E8E0D0] text-[14px] py-2 outline-none border-b border-[#3a332a] focus:border-[#C9A96E] transition-colors placeholder:text-[#5a5347]"
+                />
+              </label>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-[9px] uppercase tracking-[0.32em] text-[#5a5347]">
+                  Category
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <Chip
+                    active={props.activeCategory === null}
+                    onClick={() => props.onCategoryChange(null)}
+                  >
+                    All ({props.totalCount})
+                  </Chip>
+                  {props.categories.map((c) => (
+                    <Chip
+                      key={c.name}
+                      active={props.activeCategory === c.name}
+                      onClick={() =>
+                        props.onCategoryChange(
+                          props.activeCategory === c.name ? null : c.name
+                        )
+                      }
+                    >
+                      {c.name} ({c.count})
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-[9px] uppercase tracking-[0.32em] text-[#5a5347]">
+                  Status
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {STATUS_ORDER.map((s) => (
+                    <Chip
+                      key={s}
+                      active={props.statusFilter === s}
+                      disabled={
+                        (props.statusCounts[s] ?? 0) === 0 &&
+                        props.statusFilter !== s
+                      }
+                      onClick={() =>
+                        props.onStatusChange(props.statusFilter === s ? null : s)
+                      }
+                    >
+                      {STATUS_LABELS[s]} ({props.statusCounts[s] ?? 0})
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-[9px] uppercase tracking-[0.32em] text-[#5a5347]">
+                  Sort
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {SORT_OPTIONS.map((opt) => (
+                    <Chip
+                      key={opt.id}
+                      active={props.sortMode === opt.id}
+                      onClick={() => props.onSortChange(opt.id)}
+                    >
+                      {opt.label}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="mt-2 px-5 py-3 rounded-full bg-[#C9A96E] text-[#0A0A0F] text-[10px] uppercase tracking-[0.32em] font-medium"
+              >
+                Show results
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function Chip({
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`px-3 py-1.5 rounded-full text-[10px] uppercase tracking-[0.24em] border transition-colors ${
+        active
+          ? "border-[#C9A96E] text-[#0A0A0F] bg-[#C9A96E]"
+          : disabled
+          ? "border-[#3a332a]/50 text-[#5a5347]/50 cursor-not-allowed"
+          : "border-[#3a332a] text-[#cdc5b5]"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -563,6 +738,19 @@ function App() {
         focusedBook={selectedBook}
       />
       <SearchFilter
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        categories={categories}
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+        totalCount={books.length}
+        statusFilter={statusFilter}
+        statusCounts={statusCounts}
+        onStatusChange={setStatusFilter}
+        sortMode={sortMode}
+        onSortChange={setSortMode}
+      />
+      <MobileFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         categories={categories}
