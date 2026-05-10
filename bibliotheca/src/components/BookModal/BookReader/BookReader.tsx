@@ -12,7 +12,14 @@ import {
   type Group,
 } from "three";
 import type { Book } from "../../../types";
+import {
+  type Bookmark,
+  loadBookmarks,
+  makeBookmarkId,
+  saveBookmarks,
+} from "../../../utils/bookmarks";
 import { loadProgress, saveProgress } from "../../../utils/readingProgress";
+import { BookmarksPanel } from "./BookmarksPanel";
 import { IntroScene } from "./IntroScene";
 import { buildPageCanvas } from "./buildPageCanvas";
 import { PageMesh } from "./PageMesh";
@@ -446,6 +453,48 @@ export function BookReader({ book, onClose }: BookReaderProps) {
     saveProgress(book.gutenbergId, currentSpread);
   }, [book.gutenbergId, currentSpread]);
 
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>(() =>
+    loadBookmarks(book.gutenbergId)
+  );
+  const [bookmarksOpen, setBookmarksOpen] = useState(false);
+
+  useEffect(() => {
+    saveBookmarks(book.gutenbergId, bookmarks);
+  }, [book.gutenbergId, bookmarks]);
+
+  const addBookmark = useCallback(
+    (label?: string) => {
+      setBookmarks((list) => {
+        if (list.some((b) => b.spread === currentSpread)) return list;
+        return [
+          ...list,
+          {
+            id: makeBookmarkId(),
+            spread: currentSpread,
+            label,
+            createdAt: Date.now(),
+          },
+        ];
+      });
+    },
+    [currentSpread]
+  );
+  const removeBookmark = useCallback((id: string) => {
+    setBookmarks((list) => list.filter((b) => b.id !== id));
+  }, []);
+  const renameBookmark = useCallback((id: string, label: string) => {
+    setBookmarks((list) =>
+      list.map((b) => (b.id === id ? { ...b, label: label || undefined } : b))
+    );
+  }, []);
+  const jumpToBookmark = useCallback(
+    (spread: number) => {
+      goTo(spread);
+      setBookmarksOpen(false);
+    },
+    [goTo]
+  );
+
   const leftPageNum = currentSpread * 2 + 1;
   const rightPageNum = Math.min(leftPageNum + 1, displayPages.length);
 
@@ -593,6 +642,19 @@ export function BookReader({ book, onClose }: BookReaderProps) {
       </button>
 
       {introDone && (
+        <button
+          type="button"
+          onClick={() => setBookmarksOpen((o) => !o)}
+          aria-label="Toggle bookmarks"
+          aria-pressed={bookmarksOpen}
+          className="absolute top-6 right-20 z-20 h-11 px-4 rounded-full border border-white/10 bg-black/50 text-[#E8E0D0] hover:bg-white/10 transition-colors flex items-center gap-2 text-[10px] uppercase tracking-[0.28em]"
+        >
+          <span aria-hidden>♥</span>
+          <span>{bookmarks.length}</span>
+        </button>
+      )}
+
+      {introDone && (
         <>
           <button
             type="button"
@@ -707,6 +769,17 @@ export function BookReader({ book, onClose }: BookReaderProps) {
         </motion.div>
       )}
 
+      <BookmarksPanel
+        open={bookmarksOpen && introDone}
+        bookmarks={bookmarks}
+        currentSpread={currentSpread}
+        totalPages={displayPages.length}
+        onClose={() => setBookmarksOpen(false)}
+        onJump={jumpToBookmark}
+        onAdd={addBookmark}
+        onRemove={removeBookmark}
+        onRename={renameBookmark}
+      />
     </motion.div>
   );
 }
