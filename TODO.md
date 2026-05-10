@@ -45,7 +45,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 
 - [x] **Error boundary** per crash WebGL (alcuni device disabilitano WebGL → app bianca).
 - [ ] **Test**: smoke test con Vitest su `useBooks`, filtri, `usePageFlip`.
-- [ ] **CI**: GitHub Action con lint + build + type-check su PR.
+- [x] **CI**: GitHub Action con lint + build + type-check su PR.
 - [ ] **Deploy**: pipeline Vercel/Netlify con preview deploy per branch.
 - [ ] **Analytics minimal** (Plausible/Umami) per capire cosa viene aperto davvero.
 - [x] **A11y pass**: il carosello 3D non è navigabile da tastiera/screen reader — alternativa lista accessibile dietro skip-link, Enter per aprire il libro centrato.
