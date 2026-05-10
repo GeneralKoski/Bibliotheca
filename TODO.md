@@ -61,7 +61,7 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 
 ## Idee più ambiziose (opzionali)
 
-- [ ] **Modalità "stanza 3D"**: stanza navigabile con scaffali invece del carosello, stesso dataset.
+- [ ] **Modalità "stanza 3D"**: stanza navigabile con scaffali invece del carosello, stesso dataset. _(WIP su `feature/3d-room`: pavimento parquet, parquet, lampada, tavolino con candela, polvere, OrbitControls, libri uniformi su 3 pareti — ancora da rifinire)_
 - [ ] **AI suggestion**: "consigliami un libro in base al mio mood" con Claude API + lista libri come contesto.
 - [ ] **Backend Laravel + auth**: ogni utente la sua libreria (allineato al tuo stack principale, buon portfolio piece full-stack).
 - [ ] **Statistiche di lettura** stile Spotify Wrapped (libri completati, tempo, generi).

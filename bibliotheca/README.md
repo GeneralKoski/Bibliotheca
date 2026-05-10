@@ -14,8 +14,8 @@ page-flip reader for full books streamed from Project Gutenberg.
 - **Reader**:
   - Drag, click or arrow keys to flip pages; multi-page jumps with `goTo`.
   - Themes (cream / sepia / dark / contrast), font (sans / serif), font size.
-  - In-book search (Cmd/Ctrl+F), chapter index, bookmarks, notes & quotes
-    (with markdown export), reading-time estimate, optional page-flip sound.
+  - In-book search (Cmd/Ctrl+F), chapter index, bookmarks, notes & quotes,
+    reading-time estimate, optional page-flip sound.
   - Reading progress and downloaded text persisted (localStorage + IndexedDB)
     for offline re-opening.
 - **Deep links** (`?book=<id>`), accessible book list behind a skip-link,
