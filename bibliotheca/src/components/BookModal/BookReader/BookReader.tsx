@@ -21,6 +21,7 @@ import {
 import { loadProgress, saveProgress } from "../../../utils/readingProgress";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { IntroScene } from "./IntroScene";
+import { SearchPanel } from "./SearchPanel";
 import { buildPageCanvas } from "./buildPageCanvas";
 import { PageMesh } from "./PageMesh";
 import { useGutenbergText } from "./useGutenbergText";
@@ -457,6 +458,7 @@ export function BookReader({ book, onClose }: BookReaderProps) {
     loadBookmarks(book.gutenbergId)
   );
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     saveBookmarks(book.gutenbergId, bookmarks);
@@ -614,6 +616,11 @@ export function BookReader({ book, onClose }: BookReaderProps) {
   useEffect(() => {
     if (!introDone) return;
     const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        setSearchOpen(true);
+        return;
+      }
       if (event.key === "ArrowRight") flipForward();
       else if (event.key === "ArrowLeft") flipBackward();
     };
@@ -642,16 +649,27 @@ export function BookReader({ book, onClose }: BookReaderProps) {
       </button>
 
       {introDone && (
-        <button
-          type="button"
-          onClick={() => setBookmarksOpen((o) => !o)}
-          aria-label="Toggle bookmarks"
-          aria-pressed={bookmarksOpen}
-          className="absolute top-6 right-20 z-20 h-11 px-4 rounded-full border border-white/10 bg-black/50 text-[#E8E0D0] hover:bg-white/10 transition-colors flex items-center gap-2 text-[10px] uppercase tracking-[0.28em]"
-        >
-          <span aria-hidden>♥</span>
-          <span>{bookmarks.length}</span>
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => setSearchOpen((o) => !o)}
+            aria-label="Search in book"
+            aria-pressed={searchOpen}
+            className="absolute top-6 left-6 z-20 w-11 h-11 rounded-full border border-white/10 bg-black/50 text-[#E8E0D0] hover:bg-white/10 transition-colors flex items-center justify-center text-[15px]"
+          >
+            <span aria-hidden>⌕</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setBookmarksOpen((o) => !o)}
+            aria-label="Toggle bookmarks"
+            aria-pressed={bookmarksOpen}
+            className="absolute top-6 right-20 z-20 h-11 px-4 rounded-full border border-white/10 bg-black/50 text-[#E8E0D0] hover:bg-white/10 transition-colors flex items-center gap-2 text-[10px] uppercase tracking-[0.28em]"
+          >
+            <span aria-hidden>♥</span>
+            <span>{bookmarks.length}</span>
+          </button>
+        </>
       )}
 
       {introDone && (
@@ -779,6 +797,17 @@ export function BookReader({ book, onClose }: BookReaderProps) {
         onAdd={addBookmark}
         onRemove={removeBookmark}
         onRename={renameBookmark}
+      />
+
+      <SearchPanel
+        open={searchOpen && introDone}
+        pages={displayPages}
+        totalPages={displayPages.length}
+        onClose={() => setSearchOpen(false)}
+        onJump={(spread) => {
+          goTo(spread);
+          setSearchOpen(false);
+        }}
       />
     </motion.div>
   );
