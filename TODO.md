@@ -54,10 +54,10 @@ Possibili aggiunte e migliorie. Filtrato verificando cosa esiste già nel codice
 
 ## Contenuti / framing
 
-- [ ] **README serio**: cosa è, perché esiste, screenshot, link demo, stack, scelte di design (oggi è il README default Vite/CRA).
-- [ ] **Case study sul portfolio**: 1 paragrafo + 3-4 screenshot + clip 10s del reader in azione.
-- [ ] **Crediti**: Project Gutenberg, OpenLibrary covers, font, librerie, ispirazioni di design.
-- [ ] **About / colophon page** dentro l'app stessa.
+- [x] **README serio**: cosa è, perché esiste, screenshot, link demo, stack, scelte di design.
+- [ ] **Case study sul portfolio**: 1 paragrafo + 3-4 screenshot + clip 10s del reader in azione. _(deferred: vive sul sito portfolio, non nel repo)_
+- [x] **Crediti**: Project Gutenberg, OpenLibrary covers, font, librerie, ispirazioni di design.
+- [x] **About / colophon page** dentro l'app stessa.
 
 ## Idee più ambiziose (opzionali)
 

@@ -1,73 +1,53 @@
-# React + TypeScript + Vite
+# Bibliotheca
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An editorial 3D library to browse and read public-domain books.
 
-Currently, two official plugins are available:
+A horizontally-scrolling shelf rendered with React Three Fiber, paired with a 3D
+page-flip reader for full books streamed from Project Gutenberg.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **3D shelf** with angled books, hover lift, and a focused-volume preview panel.
+- **Grid view** as a 2D alternative (default on mobile).
+- **Filters**: search, category, status (read / reading / wishlist), sort
+  (year, author, personal rating, last opened).
+- **Reader**:
+  - Drag, click or arrow keys to flip pages; multi-page jumps with `goTo`.
+  - Themes (cream / sepia / dark / contrast), font (sans / serif), font size.
+  - In-book search (Cmd/Ctrl+F), chapter index, bookmarks, notes & quotes
+    (with markdown export), reading-time estimate, optional page-flip sound.
+  - Reading progress and downloaded text persisted (localStorage + IndexedDB)
+    for offline re-opening.
+- **Deep links** (`?book=<id>`), accessible book list behind a skip-link,
+  error boundary that falls back to grid view on WebGL failure.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Stack
 
-## Expanding the ESLint configuration
+- React 19 + TypeScript + Vite
+- React Three Fiber + Three.js for the 3D shelf and reader
+- Framer Motion for transitions
+- Tailwind CSS for layout and tokens
+- Project Gutenberg as the text source, OpenLibrary for cover images
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Development
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Texts are fetched through a `/api/gutenberg/:id` endpoint configured in
+`vite.config.ts` so requests proxy to Gutenberg without CORS issues during dev.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Credits
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Project Gutenberg** — full text of public-domain books.
+- **OpenLibrary** — cover images.
+- **Fonts**: Playfair Display & Inter (Google Fonts).
+- **Libraries**: react-three/fiber, react-three/drei, three, framer-motion.
+
+## License
+
+Code: MIT. Books: public domain. Cover images: per OpenLibrary terms.

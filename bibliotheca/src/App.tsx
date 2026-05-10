@@ -4,6 +4,7 @@ import { useBooks } from "./hooks/useBooks";
 import { useLibraryStatus } from "./hooks/useLibraryStatus";
 import { usePersonalRatings } from "./hooks/usePersonalRatings";
 import { BookCarousel } from "./components/BookCarousel/BookCarousel";
+import { Colophon } from "./components/Colophon/Colophon";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GridView } from "./components/GridView/GridView";
 import { PreviewPanel } from "./components/PreviewPanel/PreviewPanel";
@@ -676,6 +677,7 @@ function App() {
     loadLastOpened()
   );
   const [sortMode, setSortMode] = useState<SortMode>("default");
+  const [colophonOpen, setColophonOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"carousel" | "grid">(() => {
     try {
       const saved = localStorage.getItem("bibliotheca:viewMode");
@@ -979,6 +981,14 @@ function App() {
           onClose={() => setOpenBookId(null)}
         />
       )}
+      <button
+        type="button"
+        onClick={() => setColophonOpen(true)}
+        className="absolute bottom-4 right-5 md:bottom-5 md:right-8 z-20 text-[9px] uppercase tracking-[0.32em] text-[#5a5347] hover:text-[#C9A96E] transition-colors"
+      >
+        About
+      </button>
+      <Colophon open={colophonOpen} onClose={() => setColophonOpen(false)} />
     </div>
   );
 }
